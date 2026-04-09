@@ -9,10 +9,15 @@ class GratitudeJarScreen extends StatefulWidget {
   State<GratitudeJarScreen> createState() => _GratitudeJarScreenState();
 }
 
-class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTickerProviderStateMixin {
+class _GratitudeJarScreenState extends State<GratitudeJarScreen>
+    with SingleTickerProviderStateMixin {
+  // for animation
   late AnimationController _animController;
   late Animation<double> _shakeAnimation;
-
+  //
+  //
+  //
+  // quotes
   final List<String> _quotes = [
     "You are capable of amazing things.",
     "Breathe in courage, exhale doubt.",
@@ -22,7 +27,8 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
     "You are stronger than you think.",
     "Be kind to your mind.",
   ];
-
+  //
+  //
   @override
   void initState() {
     super.initState();
@@ -31,27 +37,43 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
       duration: const Duration(milliseconds: 300),
     );
 
-    // Creates a rigid physical shake effect for a heavy jar
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.08), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.08), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 0.08, end: -0.08), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _animController, curve: Curves.easeInOut));
+    //
+    //
+    // shake
+    _shakeAnimation =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.08), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.08), weight: 2),
+          TweenSequenceItem(tween: Tween(begin: 0.08, end: -0.08), weight: 2),
+          TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.0), weight: 1),
+        ]).animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+        );
   }
 
+  //
+  //
+  //
+  // dispose
   @override
   void dispose() {
     _animController.dispose();
     super.dispose();
   }
 
+  //
+  //
+  //
+  // reveal gratitude
   void _revealGratitude() async {
     await _animController.forward(from: 0.0);
     final randomQuote = _quotes[Random().nextInt(_quotes.length)];
 
+    //
+    // is this widget still on screen?
     if (!mounted) return;
-    
+    //
+    //
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -60,21 +82,33 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
           padding: const EdgeInsets.all(32),
           decoration: const BoxDecoration(
             color: AppColors.white,
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(40), topRight: Radius.circular(40)),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(40),
+              topRight: Radius.circular(40),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("🍬", style: TextStyle(fontSize: 60)),
+              const Text("🌸", style: TextStyle(fontSize: 60)),
               const SizedBox(height: 24),
               const Text(
-                "A Sweet Message",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                "A Blooming Message",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMain,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 '"$randomQuote"',
-                style: const TextStyle(fontSize: 20, fontStyle: FontStyle.italic, color: AppColors.textLight, height: 1.5),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textLight,
+                  height: 1.5,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -85,12 +119,22 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
     );
   }
 
+  //
+  //
+  //
+  //
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Daily Gratitude', style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Daily Gratitude',
+          style: TextStyle(
+            color: AppColors.textMain,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: AppColors.secondary,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textMain),
@@ -101,16 +145,22 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
           children: [
             const Text(
               "Need a little boost?",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textMain),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textMain,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
-              "Tap the jar to pick a candy thought.",
+              "Tap the jar to pick a flower thought.",
               style: TextStyle(fontSize: 16, color: AppColors.textLight),
             ),
             const SizedBox(height: 60),
-            
-            // Cute, recognizable Mason Jar layout
+            //
+            //
+            //
+            // jar
             GestureDetector(
               onTap: _revealGratitude,
               child: AnimatedBuilder(
@@ -125,50 +175,81 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    //
+                    //
                     // Jar Lid
                     Container(
                       width: 140,
                       height: 35,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB0BEC5), // Silver/Grey metal lid
+                        color: const Color(0xFFB0BEC5),
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
-                        border: Border.all(color: const Color(0xFF90A4AE), width: 2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: const Color(0xFF90A4AE),
+                          width: 2,
+                        ),
                       ),
                       child: Center(
-                        child: Container(width: 120, height: 4, color: Colors.black.withOpacity(0.05)), // Line texture
+                        child: Container(
+                          width: 120,
+                          height: 4,
+                          color: Colors.black.withOpacity(0.05),
+                        ), // Line texture
                       ),
                     ),
-                    
+
+                    //
+                    //
                     // Jar Neck
                     Container(
                       width: 120,
                       height: 15,
                       decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.5),
+                        color: AppColors.white.withOpacity(0.8),
                         border: const Border(
                           left: BorderSide(color: Colors.white, width: 4),
                           right: BorderSide(color: Colors.white, width: 4),
                         ),
                       ),
                     ),
-                    
+
+                    //
+                    //
                     // Jar Body
                     Container(
                       width: 220,
                       height: 250,
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.15), // Very light soft turquoise glass
+                        color: AppColors.accent.withOpacity(0.06),
                         borderRadius: BorderRadius.circular(40),
                         border: Border.all(color: Colors.white, width: 6),
                         boxShadow: [
-                           BoxShadow(color: AppColors.primary.withOpacity(0.1), blurRadius: 30, spreadRadius: 5)
-                        ]
+                          BoxShadow(
+                            color: const Color.fromARGB(
+                              255,
+                              249,
+                              97,
+                              97,
+                            ).withOpacity(0.13),
+                            blurRadius: 55,
+                            spreadRadius: 6,
+                            offset: const Offset(0, 18),
+                          ),
+                        ],
                       ),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Shadow reflection for glass
+                          //
+                          //
+                          // shadow reflection for glass
                           Positioned(
                             left: 10,
                             top: 20,
@@ -177,20 +258,46 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
                               height: 100,
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(10)
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            )
+                            ),
                           ),
 
-                          // Candies physically residing at the bottom
-                          const Positioned(bottom: 10, left: 30, child: Text("🍬", style: TextStyle(fontSize: 45))),
-                          const Positioned(bottom: 15, right: 35, child: Text("🍭", style: TextStyle(fontSize: 40))),
-                          const Positioned(bottom: 55, left: 55, child: Text("🍫", style: TextStyle(fontSize: 35))),
-                          const Positioned(bottom: 60, right: 30, child: Text("🍬", style: TextStyle(fontSize: 45))),
-                          const Positioned(bottom: 25, child: Text("🍭", style: TextStyle(fontSize: 48))),
-                          const Positioned(bottom: 75, left: 80, child: Text("🍬", style: TextStyle(fontSize: 40))),
+                          // Flowers physically residing at the bottom
+                          const Positioned(
+                            bottom: 10,
+                            left: 30,
+                            child: Text("🌸", style: TextStyle(fontSize: 45)),
+                          ),
+                          const Positioned(
+                            bottom: 15,
+                            right: 35,
+                            child: Text("🌷", style: TextStyle(fontSize: 40)),
+                          ),
+                          const Positioned(
+                            bottom: 55,
+                            left: 55,
+                            child: Text("🌼", style: TextStyle(fontSize: 35)),
+                          ),
+                          const Positioned(
+                            bottom: 60,
+                            right: 30,
+                            child: Text("🌺", style: TextStyle(fontSize: 45)),
+                          ),
+                          const Positioned(
+                            bottom: 25,
+                            child: Text("🌻", style: TextStyle(fontSize: 48)),
+                          ),
+                          const Positioned(
+                            bottom: 75,
+                            left: 80,
+                            child: Text("💐", style: TextStyle(fontSize: 40)),
+                          ),
 
-                          // Vintage Label "Gratitude"
+                          //
+                          //
+                          //
+                          // Label "Gratitude"
                           Positioned(
                             top: 60,
                             child: Container(
@@ -199,15 +306,26 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
                               decoration: BoxDecoration(
                                 color: AppColors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))]
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               alignment: Alignment.center,
                               child: const Text(
                                 "Gratitude",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain, letterSpacing: 1.2),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textMain,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),

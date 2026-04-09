@@ -11,7 +11,9 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<FirebaseServiceMock>(context);
-    final userName = authService.currentUserName.isNotEmpty ? authService.currentUserName : 'Friend';
+    final userName = authService.currentUserName.isNotEmpty
+        ? authService.currentUserName
+        : 'Friend';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -20,7 +22,6 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Beautiful Top Banner
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(32),
@@ -40,28 +41,41 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //
+                      //
+                      // logo and logout
                       children: [
                         const Icon(Icons.spa, color: AppColors.white, size: 40),
                         IconButton(
-                          icon: const Icon(Icons.logout, color: AppColors.textMain),
+                          icon: const Icon(
+                            Icons.logout,
+                            color: AppColors.textMain,
+                          ),
                           onPressed: () => authService.logout(),
                         ),
                       ],
                     ),
+                    //
+                    //
+                    //
+                    // welcome message
                     const SizedBox(height: 24),
                     Text(
                       'Welcome back,',
-                      style: TextStyle(fontSize: 18, color: AppColors.textMain.withOpacity(0.7)),
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: AppColors.textMain.withOpacity(0.7),
+                      ),
                     ),
                     Text(
                       userName,
-                      style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textMain,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Take a deep breath. You are doing great.',
-                      style: TextStyle(fontSize: 16, color: AppColors.textMain),
-                    ),
                   ],
                 ),
               ),
@@ -73,7 +87,10 @@ class DashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Quote of the Day Card
+                    //
+                    //
+                    //
+                    // quote
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -81,12 +98,13 @@ class DashboardScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textLight.withOpacity(0.1),
+                            color: AppColors.textLight.withOpacity(0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
-                          )
+                          ),
                         ],
                       ),
+
                       child: Row(
                         children: [
                           Container(
@@ -95,7 +113,11 @@ class DashboardScreen extends StatelessWidget {
                               color: AppColors.accent.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.format_quote, color: AppColors.accent, size: 32),
+                            child: const Icon(
+                              Icons.format_quote,
+                              color: AppColors.accent,
+                              size: 32,
+                            ),
                           ),
                           const SizedBox(width: 16),
                           const Expanded(
@@ -104,51 +126,85 @@ class DashboardScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   'Daily Inspiration',
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textLight),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textLight,
+                                  ),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  '"Peace comes from within. Do not seek it without."',
-                                  style: TextStyle(fontSize: 16, color: AppColors.textMain, fontStyle: FontStyle.italic),
+                                  '"Some days you bloom, some days you rest—both matter"',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.textMain,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
                               ],
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
 
+                    //
+                    //
+                    //
+                    // explore
                     const SizedBox(height: 32),
                     const Text(
                       'Explore',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textMain,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Elegant Grid Navigation
+                    // history and graditude
                     GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
+                      shrinkWrap:
+                          true, // Let the grid take only the space it needs
+                      physics:
+                          const NeverScrollableScrollPhysics(), //disables scrolling for this grid.
+                      crossAxisCount: 2, // number of columns
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
                       childAspectRatio: 0.9,
                       children: [
+                        //
+                        //
+                        // mood tracker
                         _buildFeatureCard(
                           context,
-                          title: 'My History',
-                          subtitle: 'View your journey',
+                          title: 'Mood Tracker',
+                          subtitle: 'See how your week shaped up',
                           icon: Icons.bar_chart_rounded,
                           color: AppColors.secondary,
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HistoryAnalyticsScreen())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HistoryAnalyticsScreen(),
+                            ),
+                          ),
                         ),
+                        //
+                        //
+                        // gratitude jar
                         _buildFeatureCard(
                           context,
                           title: 'Gratitude',
                           subtitle: 'Daily drops of joy',
-                          icon: Icons.volunteer_activism,
+                          icon: Icons.favorite,
                           color: AppColors.accent.withOpacity(0.5),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GratitudeJarScreen())),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => GratitudeJarScreen(),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -163,7 +219,17 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard(BuildContext context, {required String title, required String subtitle, required IconData icon, required Color color, required VoidCallback onTap}) {
+  //
+  //
+  // make the card toppable
+  Widget _buildFeatureCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -176,13 +242,17 @@ class DashboardScreen extends StatelessWidget {
               color: color.withOpacity(0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
-            )
+            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            //
+            //
+            //
+            // icon background
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -194,11 +264,24 @@ class DashboardScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMain,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textMain)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMain,
+                  ),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),

@@ -98,7 +98,7 @@ class _MoodEntryScreenState extends State<MoodEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.secondary,
       appBar: AppBar(
         title: const Text(
           'Track Mood',
