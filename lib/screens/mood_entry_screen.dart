@@ -107,7 +107,7 @@ class _MoodEntryScreenState extends State<MoodEntryScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: AppColors.white,
         elevation: 0,
       ),
       body: Padding(
