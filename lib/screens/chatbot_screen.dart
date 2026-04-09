@@ -87,7 +87,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('AI Companion', style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.secondary,
         elevation: 1,
       ),
       body: !_hasAgreedToDisclaimer

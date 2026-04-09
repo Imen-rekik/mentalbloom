@@ -14,7 +14,7 @@ class HistoryAnalyticsScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Statistics', style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.secondary,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textMain),
       ),

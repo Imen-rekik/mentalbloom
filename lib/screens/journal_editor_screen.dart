@@ -56,7 +56,7 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Write Journal', style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.secondary,
         elevation: 1,
         iconTheme: const IconThemeData(color: AppColors.textMain),
         actions: [

@@ -41,6 +41,7 @@ class _JournalScreenState extends State<JournalScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.secondary,
         title: const Text(
           'My Journal',
           style: TextStyle(
@@ -49,7 +50,6 @@ class _JournalScreenState extends State<JournalScreen> {
             fontSize: 26,
           ),
         ),
-        backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
@@ -71,7 +71,7 @@ class _JournalScreenState extends State<JournalScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -108,27 +108,6 @@ class _JournalScreenState extends State<JournalScreen> {
                         final displayTitle = j['title']!.isNotEmpty
                             ? j['title']!
                             : "Diary Entry";
-
-                        // Calculate word count
-                        int wordCount = j['content']!
-                            .split(RegExp(r'\s+'))
-                            .where((s) => s.isNotEmpty)
-                            .length;
-
-                        // Mock a mood tag based on content length for demonstration
-                        String moodLabel = "neutral";
-                        Color moodColor = AppColors.background;
-                        String moodEmoji = "😐";
-                        if (wordCount > 30) {
-                          moodLabel = "positive";
-                          moodEmoji = "😊";
-                          moodColor = AppColors.secondary;
-                        }
-                        if (wordCount < 10) {
-                          moodLabel = "negative";
-                          moodEmoji = "😟";
-                          moodColor = const Color(0xFFFFEBEE);
-                        }
 
                         //
                         // edit existing journal
@@ -185,7 +164,7 @@ class _JournalScreenState extends State<JournalScreen> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: Colors.black.withOpacity(0.15),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -231,48 +210,6 @@ class _JournalScreenState extends State<JournalScreen> {
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis, //....
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "$wordCount words",
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textLight,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: moodColor,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            moodEmoji,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            moodLabel,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.textMain,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ],
                             ),

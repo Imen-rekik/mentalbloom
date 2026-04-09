@@ -91,7 +91,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen> with SingleTick
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Daily Gratitude', style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.secondary,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textMain),
       ),
