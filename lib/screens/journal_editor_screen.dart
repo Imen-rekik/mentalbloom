@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 
 class JournalEditorScreen extends StatefulWidget {
@@ -58,17 +58,27 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
       contentController.text = widget.initialContent!;
   }
 
-  void _saveEntry() {
+  Future<void> _saveEntry() async {
     if (contentController.text.trim().isEmpty) return;
+
+    final service = Provider.of<FirebaseService>(context, listen: false);
 
     //
     // the journal exists
     if (widget.existingId != null) {
-      Provider.of<FirebaseServiceMock>(context, listen: false).updateJournal(
-        widget.existingId!,
-        titleController.text.trim(),
-        contentController.text.trim(),
-      );
+      try {
+        await service.updateJournal(
+          widget.existingId!,
+          titleController.text.trim(),
+          contentController.text.trim(),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -86,11 +96,19 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
       final date = DateTime.now();
       final dateStr = _formatDate(date);
 
-      Provider.of<FirebaseServiceMock>(context, listen: false).addJournal(
-        titleController.text.trim(),
-        contentController.text.trim(),
-        dateStr,
-      );
+      try {
+        await service.addJournal(
+          titleController.text.trim(),
+          contentController.text.trim(),
+          dateStr,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

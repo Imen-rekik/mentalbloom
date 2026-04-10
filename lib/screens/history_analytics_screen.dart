@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 
 class HistoryAnalyticsScreen extends StatelessWidget {
@@ -10,7 +10,7 @@ class HistoryAnalyticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     //
     // getting streak
-    final streak = Provider.of<FirebaseServiceMock>(context).moodStreak;
+    final streak = Provider.of<FirebaseService>(context).moodStreak;
     //
     //
     // UI

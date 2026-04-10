@@ -1,0 +1,93 @@
+mutation CreateDemoData @transaction @auth(level: USER, insecureReason: "This is seed data intended for development and can be run by any logged-in user.") {
+  user_insertMany(data: [
+    {
+      id: "6f5a3e1c-7b8d-4e9f-a0b1-2c3d4e5f6a7b",
+      username: "mindful_user",
+      email: "mindful@example.com",
+      createdAt: "2023-01-01T10:00:00Z",
+      profilePictureUrl: "https://example.com/mindful_user.png",
+      dailyReminderTime: "08:00 AM"
+    },
+    {
+      id: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      username: "zen_seeker",
+      email: "zen@example.com",
+      createdAt: "2023-01-05T14:30:00Z",
+      profilePictureUrl: "https://example.com/zen_seeker.png",
+      dailyReminderTime: "09:30 AM"
+    }
+  ])
+  moodLog_insertMany(data: [
+    {
+      userId: "6f5a3e1c-7b8d-4e9f-a0b1-2c3d4e5f6a7b",
+      moodRating: 8,
+      logDateTime: "2024-03-10T18:00:00Z",
+      notes: "Feeling quite positive today after a good meditation session.",
+      associatedFeelings: ["calm", "happy", "relaxed"]
+    },
+    {
+      userId: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      moodRating: 6,
+      logDateTime: "2024-03-10T16:00:00Z",
+      notes: "A bit stressed with work, but trying to stay focused.",
+      associatedFeelings: ["stressed", "focused", "anxious"]
+    },
+    {
+      userId: "6f5a3e1c-7b8d-4e9f-a0b1-2c3d4e5f6a7b",
+      moodRating: 9,
+      logDateTime: "2024-03-11T09:00:00Z",
+      notes: "Great start to the day! Feeling energetic and optimistic.",
+      associatedFeelings: ["energetic", "optimistic", "joyful"]
+    }
+  ])
+  journalEntry_insertMany(data: [
+    {
+      userId: "6f5a3e1c-7b8d-4e9f-a0b1-2c3d4e5f6a7b",
+      title: "Morning Reflections",
+      entryContent: "Reflected on yesterday's achievements and set intentions for today.",
+      entryDateTime: "2024-03-11T08:30:00Z",
+      isPrivate: false
+    },
+    {
+      userId: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      title: "Project Progress",
+      entryContent: "Detailed the progress made on the new project, outlining next steps.",
+      entryDateTime: "2024-03-10T17:00:00Z",
+      isPrivate: true
+    }
+  ])
+  activity_insertMany(data: [
+    {
+      userId: "6f5a3e1c-7b8d-4e9f-a0b1-2c3d4e5f6a7b",
+      activityName: "Meditation",
+      activityDateTime: "2024-03-10T07:00:00Z",
+      notes: "20-minute guided meditation, felt very refreshed."
+    },
+    {
+      userId: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      activityName: "Yoga",
+      activityDateTime: "2024-03-09T09:00:00Z",
+      notes: "Morning yoga flow, helped to stretch and relax."
+    }
+  ])
+  resource_insertMany(data: [
+    {
+      title: "Mindfulness for Beginners",
+      category: "Meditation Guides",
+      url: "https://example.com/mindfulness-beginners",
+      description: "A comprehensive guide to starting your mindfulness journey."
+    },
+    {
+      title: "Stress Management Techniques",
+      category: "Mental Health",
+      url: "https://example.com/stress-management",
+      description: "Effective techniques to reduce and manage stress in daily life."
+    },
+    {
+      title: "Journaling Prompts for Self-Discovery",
+      category: "Journaling",
+      url: "https://example.com/journaling-prompts",
+      description: "A collection of prompts to inspire deeper self-reflection."
+    }
+  ])
+}

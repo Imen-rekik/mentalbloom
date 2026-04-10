@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../services/firebase_service.dart';
 import 'dashboard_screen.dart';
 import 'journal_screen.dart';
 import 'mood_entry_screen.dart';
@@ -24,6 +26,18 @@ class _MainLayoutState extends State<MainLayout> {
     const RelaxScreen(), // Will contain breathe and sound
     const ChatbotScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      context.read<FirebaseService>().loadJournals();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

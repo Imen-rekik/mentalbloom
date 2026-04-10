@@ -1,0 +1,37 @@
+type User @table {
+  username: String!
+  createdAt: Timestamp!
+  email: String
+  profilePictureUrl: String
+  dailyReminderTime: String
+}
+
+type MoodLog @table {
+  user: User!
+  moodRating: Int!
+  logDateTime: Timestamp!
+  notes: String
+  associatedFeelings: [String]
+}
+
+type JournalEntry @table {
+  user: User!
+  title: String!
+  entryContent: String!
+  entryDateTime: Timestamp!
+  isPrivate: Boolean
+}
+
+type Activity @table {
+  user: User!
+  activityName: String!
+  activityDateTime: Timestamp!
+  notes: String
+}
+
+type Resource @table {
+  title: String!
+  category: String!
+  url: String!
+  description: String
+}

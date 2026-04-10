@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 
 class MoodEntryScreen extends StatefulWidget {
@@ -24,15 +24,18 @@ class _MoodEntryScreenState extends State<MoodEntryScreen> {
     {'label': 'Angry', 'emoji': '😠'},
   ];
 
-  void _saveMood() {
-    Provider.of<FirebaseServiceMock>(
-      context,
-      listen: false,
-    ).saveMood(selectedMood, intensity.toInt());
-    final currentStreak = Provider.of<FirebaseServiceMock>(
-      context,
-      listen: false,
-    ).moodStreak;
+  Future<void> _saveMood() async {
+    final service = Provider.of<FirebaseService>(context, listen: false);
+    try {
+      await service.saveMood(selectedMood, intensity.toInt());
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+      return;
+    }
+    final currentStreak = service.moodStreak;
 
     // dialog for the streak
     showDialog(

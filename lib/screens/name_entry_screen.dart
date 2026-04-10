@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 
 class NameEntryScreen extends StatefulWidget {
@@ -21,11 +21,15 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
       isLoading = true;
     });
 
-    final authService = Provider.of<FirebaseServiceMock>(
-      context,
-      listen: false,
-    );
-    await authService.setUserName(nameController.text.trim());
+    final authService = Provider.of<FirebaseService>(context, listen: false);
+    try {
+      await authService.setUserName(nameController.text.trim());
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
 
     if (!mounted) return;
     setState(() {

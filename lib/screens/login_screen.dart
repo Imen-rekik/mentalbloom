@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,17 +23,19 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading = true;
     });
 
-    // Access our fake Firebase auth
-    final authService = Provider.of<FirebaseServiceMock>(
-      context,
-      listen: false,
-    );
+    final authService = Provider.of<FirebaseService>(context, listen: false);
 
-    // Choose behavior based on mode
-    if (isLoginMode) {
-      await authService.login(userEmailInput.text, userPasswordInput.text);
-    } else {
-      await authService.signup(userEmailInput.text, userPasswordInput.text);
+    try {
+      if (isLoginMode) {
+        await authService.login(userEmailInput.text, userPasswordInput.text);
+      } else {
+        await authService.signup(userEmailInput.text, userPasswordInput.text);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
     }
 
     // Checking mounted is a good practice when dealing with async functions

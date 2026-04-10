@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 import 'history_analytics_screen.dart';
 import 'gratitude_jar_screen.dart';
@@ -10,7 +10,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<FirebaseServiceMock>(context);
+    final authService = Provider.of<FirebaseService>(context);
     final userName = authService.currentUserName.isNotEmpty
         ? authService.currentUserName
         : 'Friend';
@@ -51,7 +51,9 @@ class DashboardScreen extends StatelessWidget {
                             Icons.logout,
                             color: AppColors.textMain,
                           ),
-                          onPressed: () => authService.logout(),
+                          onPressed: () async {
+                            await authService.logout();
+                          },
                         ),
                       ],
                     ),

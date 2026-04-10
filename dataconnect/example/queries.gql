@@ -1,0 +1,42 @@
+query ListMyMoodLogs @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  moodLogs(where: {userId: {eq_expr: "auth.uid"}}, orderBy: [{logDateTime: DESC}]) {
+    id
+    moodRating
+    logDateTime
+    notes
+    associatedFeelings
+  }
+}
+
+mutation CreateJournalEntry($title: String!, $entryContent: String!, $isPrivate: Boolean) @auth(level: USER) {
+  journalEntry_insert(data: {
+    userId_expr: "auth.uid",
+    title: $title,
+    entryContent: $entryContent,
+    entryDateTime_expr: "request.time",
+    isPrivate: $isPrivate
+  }) {
+    id
+  }
+}
+
+query GetPublicResources @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  resources(orderBy: [{title: ASC}]) {
+    id
+    title
+    category
+    url
+    description
+  }
+}
+
+mutation RecordActivity($activityName: String!, $notes: String) @auth(level: USER) {
+  activity_insert(data: {
+    userId_expr: "auth.uid",
+    activityName: $activityName,
+    activityDateTime_expr: "request.time",
+    notes: $notes
+  }) {
+    id
+  }
+}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/firebase_service_mock.dart';
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 import 'journal_editor_screen.dart';
 
@@ -14,18 +14,29 @@ class JournalScreen extends StatefulWidget {
 class _JournalScreenState extends State<JournalScreen> {
   String searchQuery = "";
 
-  void _deleteJournal(String id) {
+  Future<void> _deleteJournal(String id) async {
     //
     // add delete
 
-    Provider.of<FirebaseServiceMock>(context, listen: false).deleteJournal(id);
+    try {
+      await Provider.of<FirebaseService>(
+        context,
+        listen: false,
+      ).deleteJournal(id);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     //
     // getting journals
-    final journals = Provider.of<FirebaseServiceMock>(context).journals;
+    final firebaseService = Provider.of<FirebaseService>(context);
+    final journals = firebaseService.journals;
 
     //
     // filter journals based on search
@@ -94,7 +105,12 @@ class _JournalScreenState extends State<JournalScreen> {
             //
             // Journal List
             Expanded(
-              child: filteredJournals.isEmpty
+              child: firebaseService.isJournalsLoading &&
+                      !firebaseService.hasLoadedJournals
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : filteredJournals.isEmpty
                   ? const Center(
                       child: Text(
                         "No entries found. Tap + to write one!",
@@ -140,8 +156,8 @@ class _JournalScreenState extends State<JournalScreen> {
                                     child: const Text('Cancel'),
                                   ),
                                   TextButton(
-                                    onPressed: () {
-                                      _deleteJournal(j['id']!);
+                                    onPressed: () async {
+                                      await _deleteJournal(j['id']!);
                                       Navigator.pop(ctx);
                                     },
                                     child: const Text(
