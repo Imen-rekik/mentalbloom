@@ -26,24 +26,26 @@ class _LoginScreenState extends State<LoginScreen> {
     final authService = Provider.of<FirebaseService>(context, listen: false);
 
     try {
+      final email = userEmailInput.text.trim();
+      final password = userPasswordInput.text;
+
       if (isLoginMode) {
-        await authService.login(userEmailInput.text, userPasswordInput.text);
+        await authService.login(email, password);
       } else {
-        await authService.signup(userEmailInput.text, userPasswordInput.text);
+        await authService.signup(email, password);
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
     }
-
-    // Checking mounted is a good practice when dealing with async functions
-    if (!mounted) return;
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override

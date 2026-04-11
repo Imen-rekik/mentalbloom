@@ -39,12 +39,13 @@ class FirebaseService extends ChangeNotifier {
   bool get hasLoadedJournals => _hasLoadedJournals;
   String get currentUserEmail => _currentUserEmail;
   String get currentUserName => _currentUserName;
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
   List<Map<String, String>> get journals =>
       List<Map<String, String>>.unmodifiable(_journals);
   int get moodStreak => _moodStreak;
-  // 
-  //  
-  // 
+  //
+  //
+  //
   //
   // auth state handler
   Future<void> _handleAuthChanged(User? user) async {
@@ -55,16 +56,27 @@ class FirebaseService extends ChangeNotifier {
       return;
     }
 
+    await user.reload();
+    final refreshedUser = _auth.currentUser;
+    if (refreshedUser == null || !refreshedUser.emailVerified) {
+      _resetLocalState();
+      await _auth.signOut();
+      _isInitialized = true;
+      notifyListeners();
+      return;
+    }
+
     _isLoggedIn = true;
-    _currentUserEmail = user.email ?? '';
+    _currentUserEmail = refreshedUser.email ?? '';
 
     try {
-      await _loadUserProfile(user.uid);
+      await _loadUserProfile(refreshedUser.uid);
     } finally {
       _isInitialized = true;
       notifyListeners();
     }
   }
+
   //
   //
   //
@@ -78,6 +90,7 @@ class FirebaseService extends ChangeNotifier {
     _hasLoadedJournals = false;
     _journals.clear();
   }
+
   //
   //
   //
@@ -134,50 +147,132 @@ class FirebaseService extends ChangeNotifier {
       notifyListeners();
     }
   }
+
   //
   //
   //
   //
   // authentication methods
   Future<void> login(String email, String password) async {
-    if (email.trim().isEmpty || password.isEmpty) {
-      throw Exception('Email and password are required.');
+    final trimmedEmail = email.trim();
+
+    if (trimmedEmail.isEmpty || password.isEmpty) {
+      throw Exception('Please enter your email and password.');
     }
 
+    if (password.length < 6) {
+      throw Exception('Password must be at least 6 characters.');
+    }
+
+    if (!_isValidEmail(trimmedEmail)) {
+      throw Exception('Please enter a valid email address.');
+    }
+
+    UserCredential credential;
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+      credential = await _auth.signInWithEmailAndPassword(
+        email: trimmedEmail,
         password: password,
       );
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e)); // friendly error message
+    } on FirebaseException catch (e) {
+      throw Exception(_mapPlatformError(e));
+    }
+
+    final user = credential.user;
+    if (user == null) {
+      await _auth.signOut();
+      throw Exception('Something went wrong. Please try again.');
+    }
+
+    await user.reload();
+    final refreshedUser = _auth.currentUser;
+
+    if (refreshedUser == null || !refreshedUser.emailVerified) {
+      await _auth.signOut();
+      throw Exception('Please verify your email before logging in.');
     }
   }
+
   //
   //
   //
   //
   Future<void> signup(String email, String password) async {
-    if (email.trim().isEmpty || password.isEmpty) {
-      throw Exception('Email and password are required.');
+    final trimmedEmail = email.trim();
+
+    if (trimmedEmail.isEmpty || password.isEmpty) {
+      throw Exception('Please enter your email and password.');
+    }
+
+    if (password.length < 6) {
+      throw Exception('Password must be at least 6 characters.');
+    }
+
+    if (!_isValidEmail(trimmedEmail)) {
+      throw Exception('Please enter a valid email address.');
     }
 
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
       );
 
+      final user = credential.user;
+      if (user == null) {
+        throw Exception('Something went wrong. Please try again.');
+      }
+
+      await user.sendEmailVerification();
+
       await _firestore.collection('users').doc(credential.user!.uid).set({
-        'email': email.trim(),
+        'email': trimmedEmail,
         'name': '',
         'moodStreak': 0,
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e));
+    } on FirebaseException catch (e) {
+      throw Exception(_mapPlatformError(e));
+    } catch (_) {
+      throw Exception('Something went wrong. Please try again.');
+    } finally {
+      if (_auth.currentUser != null) {
+        await _auth.signOut();
+      }
     }
   }
+
+  Future<void> resendVerificationEmail() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('Please log in to resend verification email.');
+    }
+
+    try {
+      await currentUser.reload();
+      final refreshedUser = _auth.currentUser;
+      if (refreshedUser == null) {
+        throw Exception('Please log in to resend verification email.');
+      }
+
+      if (refreshedUser.emailVerified) {
+        return;
+      }
+
+      await refreshedUser.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_mapAuthError(e));
+    } on FirebaseException catch (e) {
+      throw Exception(_mapPlatformError(e));
+    } catch (_) {
+      throw Exception('Something went wrong. Please try again.');
+    }
+  }
+
   //
   //
   //
@@ -198,6 +293,7 @@ class FirebaseService extends ChangeNotifier {
     _currentUserName = trimmedName;
     notifyListeners();
   }
+
   //
   //
   //
@@ -230,6 +326,7 @@ class FirebaseService extends ChangeNotifier {
     _moodStreak = updatedStreak;
     notifyListeners();
   }
+
   //
   //
   //
@@ -259,6 +356,7 @@ class FirebaseService extends ChangeNotifier {
     });
     notifyListeners();
   }
+
   //
   //
   //
@@ -284,7 +382,8 @@ class FirebaseService extends ChangeNotifier {
       notifyListeners();
     }
   }
-  // 
+
+  //
   //
   //
   // delete journal
@@ -301,6 +400,7 @@ class FirebaseService extends ChangeNotifier {
     _journals.removeWhere((j) => j['id'] == id);
     notifyListeners();
   }
+
   //
   //
   //
@@ -308,6 +408,7 @@ class FirebaseService extends ChangeNotifier {
   Future<void> logout() async {
     await _auth.signOut();
   }
+
   //
   //
   //
@@ -319,6 +420,7 @@ class FirebaseService extends ChangeNotifier {
     }
     return user;
   }
+
   //
   //
   //
@@ -326,22 +428,45 @@ class FirebaseService extends ChangeNotifier {
   String _mapAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email':
-        return 'The email address is invalid.';
+        return 'Please enter a valid email address.';
       case 'user-disabled':
-        return 'This account has been disabled.';
+        return 'This account has been suspended. Please contact support.';
       case 'user-not-found':
+        return 'No account found with this email.';
       case 'wrong-password':
+        return 'Incorrect password. Please try again.';
       case 'invalid-credential':
-        return 'Incorrect email or password.';
+        return 'Incorrect password. Please try again.';
       case 'email-already-in-use':
-        return 'This email is already in use.';
+        return 'An account with this email already exists. Try logging in instead.';
       case 'weak-password':
-        return 'Password is too weak.';
+        return 'Password must be at least 6 characters.';
       case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
+        return 'Something went wrong on our end. Please try again shortly.';
+      case 'network-request-failed':
+        return 'No internet connection. Please check your network and try again.';
       default:
-        return e.message ?? 'Authentication failed. Please try again.';
+        return 'Something went wrong. Please try again.';
     }
+  }
+
+  String _mapPlatformError(FirebaseException e) {
+    switch (e.code) {
+      case 'network-request-failed':
+        return 'No internet connection. Please check your network and try again.';
+      case 'unavailable':
+      case 'deadline-exceeded':
+        return 'Something went wrong on our end. Please try again shortly.';
+      default:
+        return 'Something went wrong. Please try again.';
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    final emailRegExp = RegExp(
+      r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$",
+    );
+    return emailRegExp.hasMatch(email);
   }
 
   @override
