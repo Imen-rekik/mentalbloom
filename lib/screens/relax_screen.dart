@@ -142,7 +142,7 @@ class _RelaxScreenState extends State<RelaxScreen> with TickerProviderStateMixin
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: isSelected ? hilightColor : Colors.transparent, width: 2),
             boxShadow: [
-              if (isSelected) BoxShadow(color: hilightColor.withOpacity(0.2), blurRadius: 10, spreadRadius: 1)
+              if (isSelected) BoxShadow(color: hilightColor.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: 1)
             ]
           ),
           child: Column(
@@ -246,7 +246,7 @@ class _RelaxScreenState extends State<RelaxScreen> with TickerProviderStateMixin
               ),
               
               const SizedBox(height: 32),
-              Divider(color: Colors.white.withOpacity(0.1), thickness: 1),
+              Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
               const SizedBox(height: 20),
 
               // Ambient Sounds Section

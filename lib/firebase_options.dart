@@ -41,7 +41,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDnZbNpAN9oFUTDCpWS5EnlTMa9NPSIOUE',
+    apiKey: 'AIzaSyANjg7BKEuEAkrsI42rXmD3B2jW3ifscTk',
     appId: '1:119643993095:web:09c2eda917a1bbeef626a2',
     messagingSenderId: '119643993095',
     projectId: 'mentalbloom-app-firebase',

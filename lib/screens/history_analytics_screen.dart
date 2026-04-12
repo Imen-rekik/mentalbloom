@@ -39,7 +39,7 @@ class HistoryAnalyticsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4), //shadow below the widget
                   ),
@@ -104,7 +104,7 @@ class HistoryAnalyticsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -150,9 +150,7 @@ class HistoryAnalyticsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(
-                  0.2,
-                ), // Soft background tint
+                color: AppColors.accent.withValues(alpha: 0.2,), // Soft background tint
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -197,7 +195,7 @@ class HistoryAnalyticsScreen extends StatelessWidget {
           width: 35,
           height: heightMult * 12.0,
           decoration: BoxDecoration(
-            color: isHighest ? color : color.withOpacity(0.5),
+            color: isHighest ? color : color.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(8),
           ),
         ),

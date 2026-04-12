@@ -53,7 +53,7 @@ class _MainLayoutState extends State<MainLayout> {
         type: BottomNavigationBarType.fixed, // all labels always visible
         backgroundColor: AppColors.white,
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textLight.withOpacity(0.5),
+        unselectedItemColor: AppColors.textLight.withValues(alpha: 0.5),
         showUnselectedLabels: true,
         selectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.bold,

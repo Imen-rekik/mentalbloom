@@ -82,7 +82,7 @@ class _JournalScreenState extends State<JournalScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -158,7 +158,9 @@ class _JournalScreenState extends State<JournalScreen> {
                                   TextButton(
                                     onPressed: () async {
                                       await _deleteJournal(j['id']!);
-                                      Navigator.pop(ctx);
+                                      if (ctx.mounted) {
+                                        Navigator.pop(ctx);
+                                      }
                                     },
                                     child: const Text(
                                       'Delete',
@@ -180,7 +182,7 @@ class _JournalScreenState extends State<JournalScreen> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
+                                  color: Colors.black.withValues(alpha: 0.15),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),

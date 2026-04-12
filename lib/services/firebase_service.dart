@@ -56,11 +56,17 @@ class FirebaseService extends ChangeNotifier {
       return;
     }
 
-    await user.reload();
+    try {
+      await user.reload();
+    } catch (e) {
+      // Network issues or deleted users shouldn't crash the auth stream
+      debugPrint('Error reloading user: $e');
+    }
+
     final refreshedUser = _auth.currentUser;
     if (refreshedUser == null || !refreshedUser.emailVerified) {
       _resetLocalState();
-      await _auth.signOut();
+      // Removed await _auth.signOut() to prevent terminating parallel signup operations
       _isInitialized = true;
       notifyListeners();
       return;
@@ -71,6 +77,8 @@ class FirebaseService extends ChangeNotifier {
 
     try {
       await _loadUserProfile(refreshedUser.uid);
+    } catch (e) {
+      debugPrint('Error loading user profile: $e');
     } finally {
       _isInitialized = true;
       notifyListeners();

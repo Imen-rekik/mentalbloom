@@ -52,10 +52,12 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialTitle != null)
+    if (widget.initialTitle != null) {
       titleController.text = widget.initialTitle!;
-    if (widget.initialContent != null)
+    }
+    if (widget.initialContent != null) {
       contentController.text = widget.initialContent!;
+    }
   }
 
   Future<void> _saveEntry() async {
@@ -79,6 +81,8 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
         );
         return;
       }
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -109,6 +113,8 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
         );
         return;
       }
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

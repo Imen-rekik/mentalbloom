@@ -66,7 +66,7 @@ class DashboardScreen extends StatelessWidget {
                       'Welcome back,',
                       style: TextStyle(
                         fontSize: 18,
-                        color: AppColors.textMain.withOpacity(0.7),
+                        color: AppColors.textMain.withValues(alpha: 0.7),
                       ),
                     ),
                     Text(
@@ -100,7 +100,7 @@ class DashboardScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textLight.withOpacity(0.3),
+                            color: AppColors.textLight.withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -112,7 +112,7 @@ class DashboardScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.accent.withOpacity(0.2),
+                              color: AppColors.accent.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -200,7 +200,7 @@ class DashboardScreen extends StatelessWidget {
                           title: 'Gratitude',
                           subtitle: 'Daily drops of joy',
                           icon: Icons.favorite,
-                          color: AppColors.accent.withOpacity(0.5),
+                          color: AppColors.accent.withValues(alpha: 0.5),
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -241,7 +241,7 @@ class DashboardScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.4),
+              color: color.withValues(alpha: 0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -258,7 +258,7 @@ class DashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.5),
+                color: AppColors.white.withValues(alpha: 0.5),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 32, color: AppColors.textMain),

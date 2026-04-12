@@ -37,6 +37,8 @@ class _MoodEntryScreenState extends State<MoodEntryScreen> {
     }
     final currentStreak = service.moodStreak;
 
+    if (!mounted) return;
+
     // dialog for the streak
     showDialog(
       context: context,
@@ -149,7 +151,7 @@ class _MoodEntryScreenState extends State<MoodEntryScreen> {
                       boxShadow: [
                         if (isSelected)
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.5),
+                            color: AppColors.primary.withValues(alpha: 0.5),
                             blurRadius: 10,
                             spreadRadius: 2,
                           ),

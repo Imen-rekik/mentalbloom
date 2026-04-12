@@ -200,7 +200,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                         child: Container(
                           width: 120,
                           height: 4,
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                         ), // Line texture
                       ),
                     ),
@@ -212,7 +212,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                       width: 120,
                       height: 15,
                       decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.8),
+                        color: AppColors.white.withValues(alpha: 0.8),
                         border: const Border(
                           left: BorderSide(color: Colors.white, width: 4),
                           right: BorderSide(color: Colors.white, width: 4),
@@ -227,7 +227,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                       width: 220,
                       height: 250,
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.06),
+                        color: AppColors.accent.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(40),
                         border: Border.all(color: Colors.white, width: 6),
                         boxShadow: [
@@ -237,7 +237,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                               249,
                               97,
                               97,
-                            ).withOpacity(0.13),
+                            ).withValues(alpha: 0.13),
                             blurRadius: 55,
                             spreadRadius: 6,
                             offset: const Offset(0, 18),
@@ -257,7 +257,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                               width: 15,
                               height: 100,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
