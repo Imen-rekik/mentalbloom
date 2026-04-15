@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../services/firebase_service.dart';
+import '../services/gemini_service.dart';
 
 class GratitudeJarScreen extends StatefulWidget {
   const GratitudeJarScreen({super.key});
@@ -14,19 +16,9 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
   // for animation
   late AnimationController _animController;
   late Animation<double> _shakeAnimation;
+  final GeminiService _geminiService = GeminiService();
+  bool _isGenerating = false;
   //
-  //
-  //
-  // quotes
-  final List<String> _quotes = [
-    "You are capable of amazing things.",
-    "Breathe in courage, exhale doubt.",
-    "Every day is a fresh start.",
-    "Your feelings are valid.",
-    "Progress, not perfection.",
-    "You are stronger than you think.",
-    "Be kind to your mind.",
-  ];
   //
   //
   @override
@@ -66,57 +58,81 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
   //
   // reveal gratitude
   void _revealGratitude() async {
-    await _animController.forward(from: 0.0);
-    final randomQuote = _quotes[Random().nextInt(_quotes.length)];
+    if (_isGenerating) return;
 
-    //
-    // is this widget still on screen?
-    if (!mounted) return;
-    //
-    //
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(32),
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(40),
-              topRight: Radius.circular(40),
+    setState(() {
+      _isGenerating = true;
+    });
+
+    try {
+      // 1. Shake the jar
+       _animController.forward(from: 0.0);
+
+      // 2. Get context: Latest mood from Firebase
+      final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+      final mood = await firebaseService.getLatestMoodLabel() ?? "Neutral";
+
+      // 3. Generate Quote from Gemini
+      final quote = await _geminiService.generateMoodQuote(mood);
+
+      if (!mounted) return;
+
+      // 4. Show the result
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return Container(
+            padding: const EdgeInsets.all(32),
+            decoration: const BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40),
+                topRight: Radius.circular(40),
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("🌸", style: TextStyle(fontSize: 60)),
-              const SizedBox(height: 24),
-              const Text(
-                "A Blooming Message",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("🌸", style: TextStyle(fontSize: 60)),
+                const SizedBox(height: 24),
+                Text(
+                  "A Message for your $mood Mood",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMain,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '"$randomQuote"',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.textLight,
-                  height: 1.5,
+                const SizedBox(height: 16),
+                Text(
+                  '"$quote"',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textLight,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
-            ],
-          ),
-        );
-      },
-    );
+                const SizedBox(height: 48),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text("The jar is shy right now. Try again in a moment!")),
+       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+        });
+      }
+    }
   }
 
   //
@@ -153,7 +169,7 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
             ),
             const SizedBox(height: 12),
             const Text(
-              "Tap the jar to pick a flower thought.",
+              "Tap the jar to get an AI-generated boost.",
               style: TextStyle(fontSize: 16, color: AppColors.textLight),
             ),
             const SizedBox(height: 60),
@@ -247,6 +263,12 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          if (_isGenerating)
+                            const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
                           //
                           //
                           // shadow reflection for glass

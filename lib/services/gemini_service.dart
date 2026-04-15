@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class GeminiService {
-  static const String _apiKey = "";
+  static const String _apiKey = "AIzaSyA-w8gdL-XOiD_pwiCiJ7wXuRmaXs18Q5o";
   static const String _baseUrl =
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
   static const String _systemPrompt =
@@ -54,7 +54,10 @@ RESPONSE STYLE:
 GOAL:
 Help the user feel a little better, a little lighter, or a little less alone after each message.''';
 
-  Future<String> sendMessage(String message) async {
+  Future<String> sendMessage(
+    String message, {
+    String? customSystemPrompt,
+  }) async {
     if (_apiKey.trim().isEmpty) {
       return "Gemini API key is missing. Please add your key in gemini_service.dart.";
     }
@@ -67,7 +70,7 @@ Help the user feel a little better, a little lighter, or a little less alone aft
             body: jsonEncode({
               "system_instruction": {
                 "parts": [
-                  {"text": _systemPrompt},
+                  {"text": customSystemPrompt ?? _systemPrompt},
                 ],
               },
               "contents": [
@@ -111,5 +114,56 @@ Help the user feel a little better, a little lighter, or a little less alone aft
     } catch (e) {
       return "Connection timeout or network error. Please check internet and try again. ($e)";
     }
+  }
+
+  Future<String> generateMoodQuote(String mood) async {
+    const instruction =
+        "You are a calming mental health assistant. Generate a short, supportive, and unique quote of MAXIMUM 15 words for a user who is feeling this mood. Return ONLY the quote text without explanations or quotation marks.";
+
+    try {
+      final response = await sendMessage(
+        "Current mood: $mood",
+        customSystemPrompt: instruction,
+      );
+
+      // If response starts with error indicator or is too complex, use fallback
+      if (response.contains('[') ||
+          response.contains('Gemini API key') ||
+          response.length > 200) {
+        return _getFallbackQuote(mood);
+      }
+      return response;
+    } catch (_) {
+      return _getFallbackQuote(mood);
+    }
+  }
+
+  String _getFallbackQuote(String mood) {
+    final Map<String, List<String>> fallbacks = {
+      'Happy': [
+        "May your joy today be a seed for many more blooming tomorrows.",
+        "Your radiance is contagious; keep shining your beautiful light.",
+        "Cherish this moment of sunshine in your heart; you deserve it.",
+      ],
+      'Sad': [
+        "Be gentle with yourself today; this heavy moment will eventually pass.",
+        "Your strength isn't measured by your smiles, but by your courage.",
+      ],
+      'Anxious': [
+        "The storm is outside, but you are a safe harbor. Be still and breathe.",
+        "One small step at a time is enough. You don't have to see the whole path.",
+      ],
+      'Angry': [
+        "Breath by breath, let the heat fade into a calm, quiet strength.",
+        "Let the heavy clouds of anger pass; the clear sky is still within you.",
+      ],
+      'Neutral': [
+        "Every quiet moment is an opportunity to bloom at your own pace.",
+        "Stability is a form of progress. You are exactly where you need to be.",
+      ],
+    };
+
+    final quotes = fallbacks[mood] ?? fallbacks['Neutral']!;
+    return quotes[DateTime.now().millisecond % quotes.length];
   }
 }

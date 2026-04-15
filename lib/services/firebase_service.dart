@@ -43,6 +43,8 @@ class FirebaseService extends ChangeNotifier {
   List<Map<String, String>> get journals =>
       List<Map<String, String>>.unmodifiable(_journals);
   int get moodStreak => _moodStreak;
+  bool get isUnverified =>
+      _auth.currentUser != null && !_auth.currentUser!.emailVerified;
   //
   //
   //
@@ -64,9 +66,16 @@ class FirebaseService extends ChangeNotifier {
     }
 
     final refreshedUser = _auth.currentUser;
-    if (refreshedUser == null || !refreshedUser.emailVerified) {
+    if (refreshedUser == null) {
       _resetLocalState();
-      // Removed await _auth.signOut() to prevent terminating parallel signup operations
+      _isInitialized = true;
+      notifyListeners();
+      return;
+    }
+
+    if (!refreshedUser.emailVerified) {
+      _isLoggedIn = false;
+      _currentUserEmail = refreshedUser.email ?? '';
       _isInitialized = true;
       notifyListeners();
       return;
@@ -198,8 +207,8 @@ class FirebaseService extends ChangeNotifier {
     final refreshedUser = _auth.currentUser;
 
     if (refreshedUser == null || !refreshedUser.emailVerified) {
-      await _auth.signOut();
-      throw Exception('Please verify your email before logging in.');
+      // We don't sign out anymore, let AuthWrapper handle unverified state
+      notifyListeners();
     }
   }
 
@@ -247,10 +256,6 @@ class FirebaseService extends ChangeNotifier {
       throw Exception(_mapPlatformError(e));
     } catch (_) {
       throw Exception('Something went wrong. Please try again.');
-    } finally {
-      if (_auth.currentUser != null) {
-        await _auth.signOut();
-      }
     }
   }
 
@@ -278,6 +283,14 @@ class FirebaseService extends ChangeNotifier {
       throw Exception(_mapPlatformError(e));
     } catch (_) {
       throw Exception('Something went wrong. Please try again.');
+    }
+  }
+
+  Future<void> refreshAuthStatus() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.reload();
+      await _handleAuthChanged(_auth.currentUser);
     }
   }
 
@@ -333,6 +346,22 @@ class FirebaseService extends ChangeNotifier {
 
     _moodStreak = updatedStreak;
     notifyListeners();
+  }
+
+  Future<String?> getLatestMoodLabel() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final moodSnapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('moods')
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .get();
+
+    if (moodSnapshot.docs.isEmpty) return null;
+    return moodSnapshot.docs.first.data()['label'] as String?;
   }
 
   //
@@ -442,19 +471,20 @@ class FirebaseService extends ChangeNotifier {
       case 'user-not-found':
         return 'No account found with this email.';
       case 'wrong-password':
-        return 'Incorrect password. Please try again.';
       case 'invalid-credential':
-        return 'Incorrect password. Please try again.';
+        return 'Invalid email or password. Please check your credentials.';
       case 'email-already-in-use':
         return 'An account with this email already exists. Try logging in instead.';
       case 'weak-password':
-        return 'Password must be at least 6 characters.';
+        return 'Password is too weak. Please use a stronger one.';
+      case 'operation-not-allowed':
+        return 'This sign-in method is not enabled. Please contact support.';
       case 'too-many-requests':
-        return 'Something went wrong on our end. Please try again shortly.';
+        return 'Too many attempts. Please try again later.';
       case 'network-request-failed':
         return 'No internet connection. Please check your network and try again.';
       default:
-        return 'Something went wrong. Please try again.';
+        return 'An unexpected authentication error occurred (${e.code}).';
     }
   }
 

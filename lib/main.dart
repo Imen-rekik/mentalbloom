@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'services/firebase_service.dart';
 import 'screens/login_screen.dart';
+import 'screens/email_verification_screen.dart';
 import 'screens/name_entry_screen.dart';
 import 'screens/main_layout.dart';
 
@@ -65,6 +66,10 @@ class AuthWrapper extends StatelessWidget {
 
     if (!authService.isInitialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (authService.isUnverified) {
+      return const EmailVerificationScreen();
     }
 
     if (authService.isLoggedIn && authService.currentUserName.isEmpty) {
