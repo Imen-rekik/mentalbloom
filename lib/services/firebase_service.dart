@@ -111,13 +111,35 @@ class FirebaseService extends ChangeNotifier {
   //
   //
   //
-  // load user profile
+  // load user profile — also checks streak validity on login
   Future<void> _loadUserProfile(String uid) async {
-    final userDoc = await _firestore.collection('users').doc(uid).get();
+    final userRef = _firestore.collection('users').doc(uid);
+    final userDoc = await userRef.get();
     final userData = userDoc.data() ?? <String, dynamic>{};
 
     _currentUserName = (userData['name'] as String?)?.trim() ?? '';
     _moodStreak = (userData['moodStreak'] as num?)?.toInt() ?? 0;
+
+    // On login: if the last entry was NOT yesterday (or today), reset streak to 0
+    final lastEntryTs = userData['lastEntryDate'] as Timestamp?;
+    if (lastEntryTs != null) {
+      final daysDiff = _daysBetween(lastEntryTs.toDate(), DateTime.now());
+      if (daysDiff > 1) {
+        _moodStreak = 0;
+        await userRef.set(
+          {'moodStreak': 0},
+          SetOptions(merge: true),
+        );
+      }
+    }
+  }
+
+  /// Returns the number of whole calendar days between [from] and [to],
+  /// ignoring the time-of-day component entirely.
+  int _daysBetween(DateTime from, DateTime to) {
+    final fromDate = DateTime(from.year, from.month, from.day);
+    final toDate = DateTime(to.year, to.month, to.day);
+    return toDate.difference(fromDate).inDays;
   }
 
   Future<void> loadJournals({bool forceReload = false}) async {
@@ -318,22 +340,42 @@ class FirebaseService extends ChangeNotifier {
   //
   //
   //
-  // journal methods
+  // mood methods
   Future<void> saveMood(String label, int intensity) async {
     final user = _requireUser();
     final userRef = _firestore.collection('users').doc(user.uid);
     final moodRef = userRef.collection('moods').doc();
 
     int updatedStreak = 0;
+    final now = DateTime.now();
 
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(userRef);
-      final currentStreak =
-          (snapshot.data()?['moodStreak'] as num?)?.toInt() ?? 0;
-      updatedStreak = currentStreak + 1;
+      final data = snapshot.data() ?? <String, dynamic>{};
+
+      final currentStreak = (data['moodStreak'] as num?)?.toInt() ?? 0;
+      final lastEntryTs = data['lastEntryDate'] as Timestamp?;
+
+      if (lastEntryTs == null) {
+        // Very first mood entry ever
+        updatedStreak = 1;
+      } else {
+        final daysDiff = _daysBetween(lastEntryTs.toDate(), now);
+        if (daysDiff == 1) {
+          // Entry made exactly the next calendar day → extend streak
+          updatedStreak = currentStreak + 1;
+        } else if (daysDiff > 1) {
+          // Skipped at least one full calendar day → reset
+          updatedStreak = 1;
+        } else {
+          // daysDiff == 0: same calendar day → keep streak unchanged
+          updatedStreak = currentStreak;
+        }
+      }
 
       transaction.set(userRef, {
         'moodStreak': updatedStreak,
+        'lastEntryDate': Timestamp.fromDate(now),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -362,6 +404,33 @@ class FirebaseService extends ChangeNotifier {
 
     if (moodSnapshot.docs.isEmpty) return null;
     return moodSnapshot.docs.first.data()['label'] as String?;
+  }
+
+  Future<List<Map<String, dynamic>>> getMoodsForLast7Days() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final now = DateTime.now();
+    // Start of the day 6 days ago (so including today, it's 7 days)
+    final sixDaysAgo = now.subtract(const Duration(days: 6));
+    final startOf7DaysAgo = DateTime(sixDaysAgo.year, sixDaysAgo.month, sixDaysAgo.day);
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('moods')
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOf7DaysAgo))
+        .orderBy('createdAt', descending: false)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'label': data['label'] as String?,
+        'intensity': (data['intensity'] as num?)?.toInt(),
+        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+      };
+    }).toList();
   }
 
   //

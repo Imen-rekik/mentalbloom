@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../services/gemini_service.dart';
+import '../services/ai_service.dart';
+
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -11,7 +12,8 @@ class ChatbotScreen extends StatefulWidget {
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _msgController = TextEditingController();
-  final GeminiService _geminiService = GeminiService();
+  final AIService _aiService = AIService();
+
   final ScrollController _scrollController = ScrollController();
 
   final List<Map<String, dynamic>> _messages = [];
@@ -51,7 +53,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _scrollToBottom();
     _msgController.clear();
 
-    final response = await _geminiService.sendMessage(text);
+    final response = await _aiService.sendMessage(text);
+
 
     if (!mounted) return;
     setState(() {

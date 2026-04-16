@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../services/firebase_service.dart';
-import '../services/gemini_service.dart';
+import '../services/ai_service.dart';
+
 
 class GratitudeJarScreen extends StatefulWidget {
   const GratitudeJarScreen({super.key});
@@ -16,7 +17,8 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
   // for animation
   late AnimationController _animController;
   late Animation<double> _shakeAnimation;
-  final GeminiService _geminiService = GeminiService();
+  final AIService _aiService = AIService();
+
   bool _isGenerating = false;
   //
   //
@@ -73,7 +75,8 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
       final mood = await firebaseService.getLatestMoodLabel() ?? "Neutral";
 
       // 3. Generate Quote from Gemini
-      final quote = await _geminiService.generateMoodQuote(mood);
+      final quote = await _aiService.generateMoodQuote(mood);
+
 
       if (!mounted) return;
 
