@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'breath_screen.dart';
 
@@ -14,48 +15,18 @@ class _RelaxScreenState extends State<RelaxScreen> {
   String _activeSound = "";
   double _volume = 0.70;
   bool _isLoading = false;
+  bool _isPlaying = false;
   String? _errorMessage;
 
-  // Sound mapping with more stable URLs
+  // Sound mapping uses bundled assets only.
   final List<Map<String, String>> _sounds = [
-    {
-      'name': 'Rain',
-      'icon': '🌧️',
-      'url': 'https://www.soundjay.com/nature/sounds/rain-01.mp3'
-    },
-    {
-      'name': 'Forest',
-      'icon': '🌲',
-      'url': 'https://www.soundjay.com/nature/sounds/forest-birds-01.mp3'
-    },
-    {
-      'name': 'Ocean',
-      'icon': '🌊',
-      'url': 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3'
-    },
-    {
-      'name': 'Fire',
-      'icon': '🔥',
-      'url': 'https://www.soundjay.com/free-music/sounds/fire-crackling-01.mp3'
-    },
-    {
-      'name': 'River',
-      'icon': '🏞️',
-      'url': 'https://www.soundjay.com/nature/sounds/river-1.mp3'
-    },
-    {
-      'name': 'Piano',
-      'icon': '🎹',
-      'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-    },
-    {
-      'name': 'Quran',
-      'icon': '🕌',
-      'url': 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/001.mp3'
-    },
+    {'name': 'Quran', 'icon': '🕌', 'asset': 'audio/q.mp3'},
+    {'name': 'Rain', 'icon': '🌧️', 'asset': 'audio/rain.mp3'},
+    {'name': 'Forest', 'icon': '🌲', 'asset': 'audio/forest.mp3'},
+    {'name': 'Ocean', 'icon': '🌊', 'asset': 'audio/ocean.mp3'},
+    {'name': 'Fire', 'icon': '🔥', 'asset': 'audio/fire.mp3'},
+    {'name': 'River', 'icon': '🏞️', 'asset': 'audio/river.mp3'},
   ];
-  // Note: For a production app, always download these files and place them in 'assets/audio/'
-  // then use: await _audioPlayer.play(AssetSource('audio/filename.mp3'));
 
   @override
   void initState() {
@@ -66,11 +37,10 @@ class _RelaxScreenState extends State<RelaxScreen> {
 
     // Listen to player state changes to manage loading state
     _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (state == PlayerState.playing) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+        _isPlaying = (state == PlayerState.playing);
+      });
     });
 
     _audioPlayer.onLog.listen((msg) {
@@ -84,13 +54,14 @@ class _RelaxScreenState extends State<RelaxScreen> {
     super.dispose();
   }
 
-  Future<void> _playSound(String soundName, String? url) async {
+  Future<void> _playSound(String soundName, String? assetPath) async {
     try {
       if (_activeSound == soundName) {
         await _audioPlayer.stop();
         setState(() {
           _activeSound = "";
           _isLoading = false;
+          _isPlaying = false;
           _errorMessage = null;
         });
       } else {
@@ -100,9 +71,14 @@ class _RelaxScreenState extends State<RelaxScreen> {
           _activeSound = soundName;
         });
 
-        if (url != null && url.isNotEmpty) {
-          // Play from URL
-          await _audioPlayer.play(UrlSource(url));
+        if (assetPath != null && assetPath.isNotEmpty) {
+          await _audioPlayer.stop();
+          await _audioPlayer.setVolume(_volume);
+          if (kIsWeb) {
+            await _audioPlayer.play(UrlSource('assets/assets/$assetPath'));
+          } else {
+            await _audioPlayer.play(AssetSource(assetPath));
+          }
         } else {
           setState(() {
             _isLoading = false;
@@ -143,9 +119,10 @@ class _RelaxScreenState extends State<RelaxScreen> {
               const Text(
                 'Relax & Breathe',
                 style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 30),
 
@@ -154,7 +131,9 @@ class _RelaxScreenState extends State<RelaxScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const BreathScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const BreathScreen(),
+                    ),
                   );
                 },
                 child: Container(
@@ -173,7 +152,7 @@ class _RelaxScreenState extends State<RelaxScreen> {
                         blurRadius: 20,
                         spreadRadius: 2,
                         offset: const Offset(0, 4),
-                      )
+                      ),
                     ],
                   ),
                   child: Column(
@@ -184,16 +163,23 @@ class _RelaxScreenState extends State<RelaxScreen> {
                         children: [
                           const Icon(Icons.air, color: Colors.white, size: 32),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Text(
                               "4-7-8 Method",
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -208,10 +194,7 @@ class _RelaxScreenState extends State<RelaxScreen> {
                       const SizedBox(height: 8),
                       const Text(
                         "Tap to start your guided session",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                     ],
                   ),
@@ -219,16 +202,20 @@ class _RelaxScreenState extends State<RelaxScreen> {
               ),
 
               const SizedBox(height: 40),
-              Divider(color: Colors.white.withValues(alpha: 0.05), thickness: 2),
+              Divider(
+                color: Colors.white.withValues(alpha: 0.05),
+                thickness: 2,
+              ),
               const SizedBox(height: 30),
 
               // Ambient Sounds Section
               const Text(
                 'Ambient Sounds',
                 style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -240,10 +227,13 @@ class _RelaxScreenState extends State<RelaxScreen> {
                   final isCurrentlyLoading = isSelected && _isLoading;
 
                   return GestureDetector(
-                    onTap: () => _playSound(sound['name']!, sound['url']),
+                    onTap: () => _playSound(sound['name']!, sound['asset']),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected ? hilightColor : cardColor,
                         borderRadius: BorderRadius.circular(24),
@@ -257,7 +247,7 @@ class _RelaxScreenState extends State<RelaxScreen> {
                               color: hilightColor.withValues(alpha: 0.3),
                               blurRadius: 8,
                               spreadRadius: 1,
-                            )
+                            ),
                         ],
                       ),
                       child: Row(
@@ -272,15 +262,23 @@ class _RelaxScreenState extends State<RelaxScreen> {
                                 color: Color(0xFF1B2A30),
                               ),
                             )
+                          else if (_isPlaying && isSelected)
+                            const Text('⏹️', style: TextStyle(fontSize: 18))
                           else
-                            Text(sound['icon']!,
-                                style: const TextStyle(fontSize: 18)),
+                            Text(
+                              sound['icon']!,
+                              style: const TextStyle(fontSize: 18),
+                            ),
                           const SizedBox(width: 8),
                           Text(
                             sound['name']!,
                             style: TextStyle(
-                              color: isSelected ? const Color(0xFF1B2A30) : Colors.white70,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected
+                                  ? const Color(0xFF1B2A30)
+                                  : Colors.white70,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               fontSize: 14,
                             ),
                           ),
@@ -296,7 +294,10 @@ class _RelaxScreenState extends State<RelaxScreen> {
                   padding: const EdgeInsets.only(top: 16.0),
                   child: Text(
                     _errorMessage!,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
 
@@ -306,14 +307,18 @@ class _RelaxScreenState extends State<RelaxScreen> {
               const Text(
                 'Volume',
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.volume_down, color: Colors.white.withValues(alpha: 0.6)),
+                  Icon(
+                    Icons.volume_down,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
                   Expanded(
                     child: Slider(
                       value: _volume,
@@ -325,7 +330,10 @@ class _RelaxScreenState extends State<RelaxScreen> {
                       },
                     ),
                   ),
-                  Icon(Icons.volume_up, color: Colors.white.withValues(alpha: 0.6)),
+                  Icon(
+                    Icons.volume_up,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
                 ],
               ),
               const SizedBox(height: 40),
