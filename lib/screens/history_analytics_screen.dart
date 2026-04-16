@@ -63,44 +63,59 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
   List<Map<String, double?>> _getDailyAverages() {
     final now = DateTime.now();
     final days = <Map<String, double?>>[];
-    
+
     for (int i = 6; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
       final dayMoods = _moods.where((m) {
         final mDate = m['createdAt'] as DateTime?;
         if (mDate == null) return false;
-        return mDate.year == date.year && mDate.month == date.month && mDate.day == date.day;
+        return mDate.year == date.year &&
+            mDate.month == date.month &&
+            mDate.day == date.day;
       }).toList();
 
       final Map<String, double?> dailyAvgs = {};
-      
+
       for (final emotion in _emotionColors.keys) {
-        final emotionMoods = dayMoods.where((m) => m['label'] == emotion).toList();
+        final emotionMoods = dayMoods
+            .where((m) => m['label'] == emotion)
+            .toList();
         if (emotionMoods.isEmpty) {
           dailyAvgs[emotion] = null;
         } else {
-          final sum = emotionMoods.fold(0, (prev, m) => prev + ((m['intensity'] as int?) ?? 0));
+          final sum = emotionMoods.fold(
+            0,
+            (prev, m) => prev + ((m['intensity'] as int?) ?? 0),
+          );
           dailyAvgs[emotion] = sum / emotionMoods.length;
         }
       }
-      
+
       days.add(dailyAvgs);
     }
-    
+
     return days;
   }
 
   String _getShortDayName(int daysAgo) {
     final date = DateTime.now().subtract(Duration(days: daysAgo));
     switch (date.weekday) {
-      case 1: return 'Mon';
-      case 2: return 'Tue';
-      case 3: return 'Wed';
-      case 4: return 'Thu';
-      case 5: return 'Fri';
-      case 6: return 'Sat';
-      case 7: return 'Sun';
-      default: return '';
+      case 1:
+        return 'Mon';
+      case 2:
+        return 'Tue';
+      case 3:
+        return 'Wed';
+      case 4:
+        return 'Thu';
+      case 5:
+        return 'Fri';
+      case 6:
+        return 'Sat';
+      case 7:
+        return 'Sun';
+      default:
+        return '';
     }
   }
 
@@ -110,16 +125,16 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
       return _moods.where((m) {
         final date = m['createdAt'] as DateTime?;
         if (date == null) return false;
-        return date.year == now.year && date.month == now.month && date.day == now.day;
+        return date.year == now.year &&
+            date.month == now.month &&
+            date.day == now.day;
       }).toList();
     }
     return _moods; // 'This Week'
   }
 
   Map<String, int> _getEmotionCounts() {
-    final counts = <String, int>{
-      for (var e in _emotionColors.keys) e: 0
-    };
+    final counts = <String, int>{for (var e in _emotionColors.keys) e: 0};
     for (final m in _filteredMoods) {
       final label = m['label'] as String?;
       if (label != null && counts.containsKey(label)) {
@@ -147,53 +162,55 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textMain),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                _buildMultiLineChart(),
-                const SizedBox(height: 24),
-                _buildDonutChart(),
-                const SizedBox(height: 24),
-                // streak
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.2), // Soft background tint
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          const Text("🔥", style: TextStyle(fontSize: 18)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              "You've logged your mood $streak days in a row!",
-                              style: const TextStyle(
-                                color: AppColors.textMain,
-                                fontWeight: FontWeight.w500,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  _buildMultiLineChart(),
+                  const SizedBox(height: 24),
+                  _buildDonutChart(),
+                  const SizedBox(height: 24),
+                  // streak
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(
+                        alpha: 0.2,
+                      ), // Soft background tint
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Text("🔥", style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "You've logged your mood $streak days in a row!",
+                                style: const TextStyle(
+                                  color: AppColors.textMain,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 40),
-              ],
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
-          ),
     );
   }
 
   Widget _buildMultiLineChart() {
     final dailyAverages = _getDailyAverages();
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -221,10 +238,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
           const SizedBox(height: 4),
           const Text(
             "Your emotional intensity over the past 7 days",
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textLight,
-            ),
+            style: TextStyle(fontSize: 14, color: AppColors.textLight),
           ),
           const SizedBox(height: 16),
           // Toggle Buttons
@@ -235,7 +249,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                 final isActive = _activeEmotions[emotion]!;
                 final color = _emotionColors[emotion]!;
                 final emoji = _emotionEmojis[emotion]!;
-                
+
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: InkWell(
@@ -246,9 +260,14 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: isActive ? color.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
+                        color: isActive
+                            ? color.withValues(alpha: 0.15)
+                            : Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isActive ? color : Colors.transparent,
@@ -263,7 +282,9 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                             emotion,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isActive
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               color: isActive ? color : AppColors.textLight,
                             ),
                           ),
@@ -299,8 +320,12 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -342,7 +367,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                   if (!_activeEmotions[emotion]!) {
                     return LineChartBarData(show: false);
                   }
-                  
+
                   final spots = <FlSpot>[];
                   for (int i = 0; i < 7; i++) {
                     final avg = dailyAverages[i][emotion];
@@ -352,7 +377,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                       spots.add(FlSpot.nullSpot);
                     }
                   }
-                  
+
                   return LineChartBarData(
                     spots: spots,
                     isCurved: true,
@@ -382,14 +407,16 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
 
   Map<String, Map<String, int>> _getEmotionData() {
     final data = <String, Map<String, int>>{
-      for (var e in _emotionColors.keys) e: {'entryCount': 0, 'intensitySum': 0}
+      for (var e in _emotionColors.keys)
+        e: {'entryCount': 0, 'intensitySum': 0},
     };
     for (final m in _filteredMoods) {
       final label = m['label'] as String?;
       final intensity = (m['intensity'] as num?)?.toInt() ?? 0;
       if (label != null && data.containsKey(label)) {
         data[label]!['entryCount'] = data[label]!['entryCount']! + 1;
-        data[label]!['intensitySum'] = data[label]!['intensitySum']! + intensity;
+        data[label]!['intensitySum'] =
+            data[label]!['intensitySum']! + intensity;
       }
     }
     return data;
@@ -397,8 +424,14 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
 
   Widget _buildDonutChart() {
     final emotionData = _getEmotionData();
-    final totalEntries = emotionData.values.fold(0, (a, b) => a + b['entryCount']!);
-    final totalIntensity = emotionData.values.fold(0, (a, b) => a + b['intensitySum']!);
+    final totalEntries = emotionData.values.fold(
+      0,
+      (a, b) => a + b['entryCount']!,
+    );
+    final totalIntensity = emotionData.values.fold(
+      0,
+      (a, b) => a + b['intensitySum']!,
+    );
 
     // Find dominant by intensity sum
     String dominantEmotion = 'Happy'; // default
@@ -425,113 +458,142 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
         ],
       ),
       child: Column(
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-            // Title and Toggle
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Emotion Distribution",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title and Toggle
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Emotion Distribution",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMain,
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: ['Today', 'This Week'].map((filter) {
-                      final isSelected = _timeFilter == filter;
-                      return GestureDetector(
-                        onTap: () {
-                           setState(() {
-                              _timeFilter = filter;
-                              _touchedPieIndex = -1;
-                           });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.textMain : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)] : null,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: ['Today', 'This Week'].map((filter) {
+                    final isSelected = _timeFilter == filter;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _timeFilter = filter;
+                          _touchedPieIndex = -1;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.textMain
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 4,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Text(
+                          filter,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textLight,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            fontSize: 12,
                           ),
-                          child: Text(
-                            filter,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          if (totalEntries == 0)
+            _buildEmptyState()
+          else
+            Column(
+              children: [
+                SizedBox(
+                  height: 220,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PieChart(
+                        PieChartData(
+                          pieTouchData: PieTouchData(
+                            touchCallback:
+                                (FlTouchEvent event, pieTouchResponse) {
+                                  setState(() {
+                                    if (!event.isInterestedForInteractions ||
+                                        pieTouchResponse == null ||
+                                        pieTouchResponse.touchedSection ==
+                                            null) {
+                                      _touchedPieIndex = -1;
+                                      return;
+                                    }
+                                    _touchedPieIndex = pieTouchResponse
+                                        .touchedSection!
+                                        .touchedSectionIndex;
+                                  });
+                                },
+                          ),
+                          sectionsSpace: 4,
+                          centerSpaceRadius: 60,
+                          sections: _getPieSections(
+                            emotionData,
+                            totalIntensity,
+                          ),
+                        ),
+                        swapAnimationDuration: const Duration(
+                          milliseconds: 300,
+                        ),
+                      ),
+                      // Center text
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _emotionEmojis[dominantEmotion] ?? '',
+                            style: const TextStyle(fontSize: 40),
+                          ),
+                          const Text(
+                            "Dominant",
                             style: TextStyle(
-                               color: isSelected ? Colors.white : AppColors.textLight,
-                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                               fontSize: 12,
+                              fontSize: 12,
+                              color: AppColors.textLight,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  )
-                )
-              ]
-            ),
-            const SizedBox(height: 32),
-            
-            if (totalEntries == 0)
-              _buildEmptyState()
-            else
-              Column(
-                children: [
-                  SizedBox(
-                    height: 220,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        PieChart(
-                          PieChartData(
-                            pieTouchData: PieTouchData(
-                              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                                setState(() {
-                                  if (!event.isInterestedForInteractions ||
-                                      pieTouchResponse == null ||
-                                      pieTouchResponse.touchedSection == null) {
-                                    _touchedPieIndex = -1;
-                                    return;
-                                  }
-                                  _touchedPieIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                                });
-                              },
-                            ),
-                            sectionsSpace: 4,
-                            centerSpaceRadius: 60,
-                            sections: _getPieSections(emotionData, totalIntensity),
-                          ),
-                          swapAnimationDuration: const Duration(milliseconds: 300),
-                        ),
-                        // Center text
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _emotionEmojis[dominantEmotion] ?? '',
-                              style: const TextStyle(fontSize: 40),
-                            ),
-                            const Text(
-                              "Dominant",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textLight,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                  _buildLegend(emotionData, totalIntensity),
-                ]
-              )
-         ]
-      )
+                ),
+                const SizedBox(height: 32),
+                _buildLegend(emotionData, totalIntensity),
+              ],
+            ),
+        ],
+      ),
     );
   }
 
@@ -545,7 +607,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
       final radius = isTouched ? 45.0 : 35.0;
       final intensitySum = emotionData[entry.key]!['intensitySum']!;
       final value = intensitySum.toDouble();
-      
+
       final section = PieChartSectionData(
         color: entry.value,
         value: value,
@@ -558,45 +620,42 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
   }
 
   Widget _buildEmptyState() {
-     return Center(
-       child: Padding(
-         padding: const EdgeInsets.symmetric(vertical: 40),
-         child: Column(
-           children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: const Text('🌱', style: TextStyle(fontSize: 48)),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 16),
-              const Text(
-                "No entries yet",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
-                ),
+              child: const Text('🌱', style: TextStyle(fontSize: 48)),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "No entries yet",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textMain,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                "When you log your mood,\nit will appear here.",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textLight,
-                ),
-                textAlign: TextAlign.center,
-              ),
-           ]
-         )
-       )
-     );
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "When you log your mood,\nit will appear here.",
+              style: TextStyle(fontSize: 14, color: AppColors.textLight),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildLegend(
-    Map<String, Map<String, int>> emotionData, 
+    Map<String, Map<String, int>> emotionData,
     int totalIntensity,
   ) {
     int index = 0;
@@ -607,7 +666,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
       final data = emotionData[emotion]!;
       final intensitySum = data['intensitySum']!;
       final entryCount = data['entryCount']!;
-      
+
       final currentIndex = index; // capture for the closure loop
       index++; // increment before continue so indexing stays aligned with pie chart!
 
@@ -616,42 +675,46 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
       }
 
       final isTouched = currentIndex == _touchedPieIndex;
-      final percentage = (intensitySum / totalIntensity * 100).toStringAsFixed(0);
+      final percentage = (intensitySum / totalIntensity * 100).toStringAsFixed(
+        0,
+      );
 
       items.add(
-           Container(
-             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-             decoration: BoxDecoration(
-               color: isTouched ? entry.value.withValues(alpha: 0.1) : Colors.transparent,
-               borderRadius: BorderRadius.circular(12),
-             ),
-             child: Row(
-               children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: entry.value,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    emotion,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textMain,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    "$percentage%",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: entry.value,
-                      fontSize: 16,
-                    ),
-                  ),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isTouched
+                ? entry.value.withValues(alpha: 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: entry.value,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                emotion,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textMain,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                "$percentage%",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: entry.value,
+                  fontSize: 16,
+                ),
+              ),
               const SizedBox(width: 8),
               Text(
                 "($entryCount entries)",
@@ -664,14 +727,14 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
           ),
         ),
       );
-        
-        items.add(Divider(color: Colors.grey.withValues(alpha: 0.1), height: 1));
-     }
-     
-     if (items.isNotEmpty && items.last is Divider) {
-       items.removeLast();
-     }
-     
-     return Column(children: items);
+
+      items.add(Divider(color: Colors.grey.withValues(alpha: 0.1), height: 1));
+    }
+
+    if (items.isNotEmpty && items.last is Divider) {
+      items.removeLast();
+    }
+
+    return Column(children: items);
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'breath_screen.dart';
 
 class RelaxScreen extends StatefulWidget {
   const RelaxScreen({super.key});
@@ -7,155 +9,121 @@ class RelaxScreen extends StatefulWidget {
   State<RelaxScreen> createState() => _RelaxScreenState();
 }
 
-class _RelaxScreenState extends State<RelaxScreen> with TickerProviderStateMixin {
-  AnimationController? _breathingController;
-  late Animation<double> _breatheAnimation;
-  
+class _RelaxScreenState extends State<RelaxScreen> {
+  late AudioPlayer _audioPlayer;
   String _activeSound = "";
   double _volume = 0.70;
-  String _activeMode = "Focus";
-  String _breathingText = "Breathe In...";
+  bool _isLoading = false;
+  String? _errorMessage;
 
+  // Sound mapping with more stable URLs
   final List<Map<String, String>> _sounds = [
-    {'name': 'Rain', 'icon': '🌧️'},
-    {'name': 'Storm', 'icon': '⛈️'},
-    {'name': 'Forest', 'icon': '🌲'},
-    {'name': 'Fire', 'icon': '🔥'},
-    {'name': 'Birds', 'icon': '🐦'},
-    {'name': 'Wind', 'icon': '💨'},
-    {'name': 'River', 'icon': '🏞️'},
-    {'name': 'Quran', 'icon': '🕌'},
+    {
+      'name': 'Rain',
+      'icon': '🌧️',
+      'url': 'https://www.soundjay.com/nature/sounds/rain-01.mp3'
+    },
+    {
+      'name': 'Forest',
+      'icon': '🌲',
+      'url': 'https://www.soundjay.com/nature/sounds/forest-birds-01.mp3'
+    },
+    {
+      'name': 'Ocean',
+      'icon': '🌊',
+      'url': 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3'
+    },
+    {
+      'name': 'Fire',
+      'icon': '🔥',
+      'url': 'https://www.soundjay.com/free-music/sounds/fire-crackling-01.mp3'
+    },
+    {
+      'name': 'River',
+      'icon': '🏞️',
+      'url': 'https://www.soundjay.com/nature/sounds/river-1.mp3'
+    },
+    {
+      'name': 'Piano',
+      'icon': '🎹',
+      'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+    },
+    {
+      'name': 'Quran',
+      'icon': '🕌',
+      'url': 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/001.mp3'
+    },
   ];
+  // Note: For a production app, always download these files and place them in 'assets/audio/'
+  // then use: await _audioPlayer.play(AssetSource('audio/filename.mp3'));
 
   @override
   void initState() {
     super.initState();
-    _setupBreathingMode("Focus"); // Start with Box Breathing
-  }
+    _audioPlayer = AudioPlayer();
+    _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    _audioPlayer.setVolume(_volume);
 
-  void _setupBreathingMode(String mode) {
-    if (_breathingController != null) {
-      _breathingController!.dispose();
-    }
-
-    _activeMode = mode;
-    int durationSecs = 16; 
-    TweenSequence<double> sequence = TweenSequence([]);
-
-    if (mode == "Focus") {
-      durationSecs = 16;
-      sequence = TweenSequence([
-        TweenSequenceItem(tween: Tween(begin: 0.6, end: 1.2).chain(CurveTween(curve: Curves.easeInOut)), weight: 25), 
-        TweenSequenceItem(tween: ConstantTween(1.2), weight: 25), 
-        TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.6).chain(CurveTween(curve: Curves.easeInOut)), weight: 25), 
-        TweenSequenceItem(tween: ConstantTween(0.6), weight: 25), 
-      ]);
-    } else if (mode == "Relax") {
-      durationSecs = 19;
-      sequence = TweenSequence([
-        TweenSequenceItem(tween: Tween(begin: 0.6, end: 1.2).chain(CurveTween(curve: Curves.easeInOut)), weight: 21.1),
-        TweenSequenceItem(tween: ConstantTween(1.2), weight: 36.8),
-        TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.6).chain(CurveTween(curve: Curves.easeInOut)), weight: 42.1),
-      ]);
-    } else if (mode == "Sleep") {
-      durationSecs = 12;
-      sequence = TweenSequence([
-        TweenSequenceItem(tween: Tween(begin: 0.6, end: 1.2).chain(CurveTween(curve: Curves.easeInOut)), weight: 50),
-        TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.6).chain(CurveTween(curve: Curves.easeInOut)), weight: 50),
-      ]);
-    }
-
-    _breathingController = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: durationSecs),
-    );
-
-    _breatheAnimation = sequence.animate(_breathingController!);
-
-    _breathingController!.addListener(() {
-      if (!mounted) return;
-      double t = _breathingController!.value;
-      String nextText = _calculateBreathingPhase(t, mode);
-      if (nextText != _breathingText) {
+    // Listen to player state changes to manage loading state
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (state == PlayerState.playing) {
         setState(() {
-          _breathingText = nextText;
+          _isLoading = false;
         });
       }
     });
 
-    _breathingController!.repeat();
-    if (mounted) setState(() {});
-  }
-
-  String _calculateBreathingPhase(double t, String mode) {
-    if (mode == "Focus") {
-      if (t < 0.25) return "Breathe In...";
-      if (t < 0.5) return "Hold...";
-      if (t < 0.75) return "Breathe Out...";
-      return "Hold...";
-    } else if (mode == "Relax") {
-      if (t < 0.211) return "Breathe In...";
-      if (t < 0.579) return "Hold...";
-      return "Breathe Out...";
-    } else if (mode == "Sleep") {
-      if (t < 0.5) return "Deep Breathe In...";
-      return "Deep Breathe Out...";
-    }
-    return "";
-  }
-
-  String _getModeDescription(String mode) {
-    if (mode == "Focus") return "Box breathing: 4s in · 4s hold · 4s out · 4s hold";
-    if (mode == "Relax") return "4-7-8 method: 4s in · 7s hold · 8s out";
-    return "Deep sleep rhythm: 6s in · 6s out";
+    _audioPlayer.onLog.listen((msg) {
+      debugPrint("AudioPlayer Log: $msg");
+    });
   }
 
   @override
   void dispose() {
-    _breathingController?.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  void _playSound(String soundName) {
-    setState(() {
+  Future<void> _playSound(String soundName, String? url) async {
+    try {
       if (_activeSound == soundName) {
-        _activeSound = "";
+        await _audioPlayer.stop();
+        setState(() {
+          _activeSound = "";
+          _isLoading = false;
+          _errorMessage = null;
+        });
       } else {
-        _activeSound = soundName;
-      }
-    });
-  }
+        setState(() {
+          _errorMessage = null;
+          _isLoading = true;
+          _activeSound = soundName;
+        });
 
-  // Helper widget for Top Buttons
-  Widget _buildTopButton(String title, String emoji, bool isSelected) {
-    final bgColor = const Color(0xFF26363B);
-    final hilightColor = const Color(0xFFA3D5D3);
-    
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _setupBreathingMode(title),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isSelected ? hilightColor : Colors.transparent, width: 2),
-            boxShadow: [
-              if (isSelected) BoxShadow(color: hilightColor.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: 1)
-            ]
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 24)),
-              const SizedBox(height: 8),
-              Text(title, style: const TextStyle(color: Colors.white, fontSize: 13)),
-            ],
-          ),
-        ),
-      ),
-    );
+        if (url != null && url.isNotEmpty) {
+          // Play from URL
+          await _audioPlayer.play(UrlSource(url));
+        } else {
+          setState(() {
+            _isLoading = false;
+            _activeSound = "";
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("No URL provided for $soundName")),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error playing sound: $e");
+      setState(() {
+        _isLoading = false;
+        _activeSound = "";
+        _errorMessage = "Failed to load audio. Please check your connection.";
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error playing sound: ${e.toString()}")),
+      );
+    }
   }
 
   @override
@@ -163,7 +131,6 @@ class _RelaxScreenState extends State<RelaxScreen> with TickerProviderStateMixin
     final bgColor = const Color(0xFF1B2A30);
     final cardColor = const Color(0xFF26363B);
     final hilightColor = const Color(0xFFA3D5D3);
-    final circleDark = const Color(0xFF22343B);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -175,142 +142,190 @@ class _RelaxScreenState extends State<RelaxScreen> with TickerProviderStateMixin
             children: [
               const Text(
                 'Relax & Breathe',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
-              const SizedBox(height: 20),
-              
-              // Top Mode Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildTopButton("Relax", "😌", _activeMode == "Relax"),
-                  _buildTopButton("Focus", "🎯", _activeMode == "Focus"),
-                  _buildTopButton("Sleep", "🌙", _activeMode == "Sleep"),
-                ],
-              ),
-              
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
-              // Breathing Circle
-              Center(
-                child: ScaleTransition(
-                  scale: _breatheAnimation,
-                  child: Container(
-                    width: 260,
-                    height: 260,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: circleDark,
-                      boxShadow: [
-                        BoxShadow(
-                           color: circleDark,
-                           blurRadius: 20,
-                           spreadRadius: 20,
-                        )
-                      ]
+              // Hero Card for Breathing Exercise
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BreathScreen()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF337980), Color(0xFF26363B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    child: Center(
-                      child: Container(
-                        width: 220,
-                        height: 220,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [Color(0xFF67B5B6), Color(0xFF337980)],
-                            radius: 0.6,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: hilightColor.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Icon(Icons.air, color: Colors.white, size: 32),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Text(
+                              "4-7-8 Method",
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
                           )
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text("🌬️", style: TextStyle(fontSize: 48)),
-                            const SizedBox(height: 12),
-                            Text(
-                              _breathingText,
-                              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                            )
-                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Breathing Exercise",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Tap to start your guided session",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 24),
-              Center(
-                child: Text(
-                  _getModeDescription(_activeMode),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
-              const SizedBox(height: 20),
+
+              const SizedBox(height: 40),
+              Divider(color: Colors.white.withValues(alpha: 0.05), thickness: 2),
+              const SizedBox(height: 30),
 
               // Ambient Sounds Section
               const Text(
                 'Ambient Sounds',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               const SizedBox(height: 20),
-              
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.8,
-                ),
-                itemCount: _sounds.length,
-                itemBuilder: (context, index) {
-                  final sound = _sounds[index];
+
+              Wrap(
+                spacing: 12,
+                runSpacing: 16,
+                children: _sounds.map((sound) {
                   final isSelected = _activeSound == sound['name'];
-                  
+                  final isCurrentlyLoading = isSelected && _isLoading;
+
                   return GestureDetector(
-                    onTap: () => _playSound(sound['name']!),
-                    child: Container(
+                    onTap: () => _playSound(sound['name']!, sound['url']),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: isSelected ? cardColor : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: isSelected ? hilightColor : Colors.transparent, width: 2),
+                        color: isSelected ? hilightColor : cardColor,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isSelected ? hilightColor : Colors.transparent,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          if (isSelected)
+                            BoxShadow(
+                              color: hilightColor.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            )
+                        ],
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(sound['icon']!, style: const TextStyle(fontSize: 26)),
-                          const SizedBox(height: 8),
-                          Text(sound['name']!, style: TextStyle(color: isSelected? Colors.white : Colors.white70, fontSize: 12)),
+                          if (isCurrentlyLoading)
+                            const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF1B2A30),
+                              ),
+                            )
+                          else
+                            Text(sound['icon']!,
+                                style: const TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
+                          Text(
+                            sound['name']!,
+                            style: TextStyle(
+                              color: isSelected ? const Color(0xFF1B2A30) : Colors.white70,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontSize: 14,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   );
-                },
+                }).toList(),
               ),
 
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                  ),
+                ),
+
               const SizedBox(height: 40),
-              
+
               // Volume Slider
               const Text(
                 'Volume',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  const Text("🌧️", style: TextStyle(fontSize: 20)),
+                  Icon(Icons.volume_down, color: Colors.white.withValues(alpha: 0.6)),
                   Expanded(
                     child: Slider(
                       value: _volume,
                       activeColor: hilightColor,
                       inactiveColor: cardColor,
-                      onChanged: (val) => setState(() => _volume = val),
+                      onChanged: (val) {
+                        setState(() => _volume = val);
+                        _audioPlayer.setVolume(val);
+                      },
                     ),
                   ),
-                  Text("${(_volume * 100).toInt()}%", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  Icon(Icons.volume_up, color: Colors.white.withValues(alpha: 0.6)),
                 ],
               ),
               const SizedBox(height: 40),
