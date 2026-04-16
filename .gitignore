@@ -43,7 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
- 
- # Environment Variables
- .env
+
+# Environment Variables
+.env
+
+# Firebase client config (keep local)
+/android/app/google-services.json
+/android/app/google-services (2).json
 
