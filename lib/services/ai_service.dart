@@ -7,22 +7,20 @@ class AIService {
   static const String _baseUrl =
       "https://openrouter.ai/api/v1/chat/completions";
 
-  // Models split into 3 groups of 3 — OpenRouter allows max 3 per request.
-  // Each group is tried in order; advance to the next only on a 429.
   static const List<List<String>> _modelGroups = [
-    // Group 1
+    // G1
     [
       "openai/gpt-4o-mini",
       "anthropic/claude-3.5-haiku",
       "meta-llama/llama-3.3-70b-instruct:free",
     ],
-    // Group 2
+    // G2
     [
       "google/gemini-flash-1.5:free",
       "mistralai/mistral-7b-instruct:free",
       "deepseek/deepseek-r1:free",
     ],
-    // Group 3 (last resort)
+    // G3
     [
       "qwen/qwen-2.5-72b-instruct:free",
       "google/gemini-2.0-flash-thinking-exp:free",
@@ -87,7 +85,6 @@ Help the user feel a little better, a little lighter, or a little less alone aft
       return "AI API key is missing. Please add your OPENROUTER_API_KEY in the .env file.";
     }
 
-    // Try each model group in sequence; only advance on 429
     for (int i = 0; i < _modelGroups.length; i++) {
       final group = _modelGroups[i];
 
@@ -126,14 +123,14 @@ Help the user feel a little better, a little lighter, or a little less alone aft
           }
           return "I'm here with you. I just couldn't generate a reply right now.";
         } else if (response.statusCode == 429) {
-          // All models in this group hit rate limits — try next group
+          // hits limit -> try next group
           if (i < _modelGroups.length - 1) {
             continue;
           }
-          // All 3 groups exhausted
+          // All hits limits
           return "I'm a bit busy right now, please try again in a moment";
         } else {
-          // Non-429 error — stop retrying
+          // Non-429 error
           String details = "Unknown Error";
           try {
             final errorData = jsonDecode(response.body);
@@ -163,7 +160,6 @@ Help the user feel a little better, a little lighter, or a little less alone aft
         customSystemPrompt: instruction,
       );
 
-      // If response starts with error indicator or is too complex, use fallback
       if (response.contains('[') ||
           response.contains('API key') ||
           response.length > 200) {

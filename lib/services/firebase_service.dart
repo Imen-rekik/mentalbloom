@@ -61,7 +61,6 @@ class FirebaseService extends ChangeNotifier {
     try {
       await user.reload();
     } catch (e) {
-      // Network issues or deleted users shouldn't crash the auth stream
       debugPrint('Error reloading user: $e');
     }
 
@@ -111,7 +110,7 @@ class FirebaseService extends ChangeNotifier {
   //
   //
   //
-  // load user profile — also checks streak validity on login
+  // streak validity on login
   Future<void> _loadUserProfile(String uid) async {
     final userRef = _firestore.collection('users').doc(uid);
     final userDoc = await userRef.get();
@@ -120,22 +119,17 @@ class FirebaseService extends ChangeNotifier {
     _currentUserName = (userData['name'] as String?)?.trim() ?? '';
     _moodStreak = (userData['moodStreak'] as num?)?.toInt() ?? 0;
 
-    // On login: if the last entry was NOT yesterday (or today), reset streak to 0
+    // if user logs in after more than 1 day, reset streak to 0
     final lastEntryTs = userData['lastEntryDate'] as Timestamp?;
     if (lastEntryTs != null) {
       final daysDiff = _daysBetween(lastEntryTs.toDate(), DateTime.now());
       if (daysDiff > 1) {
         _moodStreak = 0;
-        await userRef.set(
-          {'moodStreak': 0},
-          SetOptions(merge: true),
-        );
+        await userRef.set({'moodStreak': 0}, SetOptions(merge: true));
       }
     }
   }
 
-  /// Returns the number of whole calendar days between [from] and [to],
-  /// ignoring the time-of-day component entirely.
   int _daysBetween(DateTime from, DateTime to) {
     final fromDate = DateTime(from.year, from.month, from.day);
     final toDate = DateTime(to.year, to.month, to.day);
@@ -229,7 +223,6 @@ class FirebaseService extends ChangeNotifier {
     final refreshedUser = _auth.currentUser;
 
     if (refreshedUser == null || !refreshedUser.emailVerified) {
-      // We don't sign out anymore, let AuthWrapper handle unverified state
       notifyListeners();
     }
   }
@@ -357,18 +350,18 @@ class FirebaseService extends ChangeNotifier {
       final lastEntryTs = data['lastEntryDate'] as Timestamp?;
 
       if (lastEntryTs == null) {
-        // Very first mood entry ever
+        // first mood entry
         updatedStreak = 1;
       } else {
         final daysDiff = _daysBetween(lastEntryTs.toDate(), now);
         if (daysDiff == 1) {
-          // Entry made exactly the next calendar day → extend streak
+          // exactly the next day → extend streak
           updatedStreak = currentStreak + 1;
         } else if (daysDiff > 1) {
-          // Skipped at least one full calendar day → reset
+          // Skipped at least one day → reset
           updatedStreak = 1;
         } else {
-          // daysDiff == 0: same calendar day → keep streak unchanged
+          // daysDiff == 0: streak unchanged
           updatedStreak = currentStreak;
         }
       }
@@ -411,15 +404,21 @@ class FirebaseService extends ChangeNotifier {
     if (user == null) return [];
 
     final now = DateTime.now();
-    // Start of the day 6 days ago (so including today, it's 7 days)
     final sixDaysAgo = now.subtract(const Duration(days: 6));
-    final startOf7DaysAgo = DateTime(sixDaysAgo.year, sixDaysAgo.month, sixDaysAgo.day);
+    final startOf7DaysAgo = DateTime(
+      sixDaysAgo.year,
+      sixDaysAgo.month,
+      sixDaysAgo.day,
+    );
 
     final snapshot = await _firestore
         .collection('users')
         .doc(user.uid)
         .collection('moods')
-        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOf7DaysAgo))
+        .where(
+          'createdAt',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOf7DaysAgo),
+        )
         .orderBy('createdAt', descending: false)
         .get();
 
