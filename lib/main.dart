@@ -60,11 +60,11 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //
-    //
-    //
-    //isLoggedIn and current name status
-    final authService = Provider.of<FirebaseService>(context);
+    final authService = Provider.of<FirebaseService?>(context, listen: false);
+
+    if (authService == null) {
+      return const LoginScreen();
+    }
 
     if (!authService.isInitialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));

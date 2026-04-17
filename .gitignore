@@ -50,4 +50,5 @@ app.*.map.json
 # Firebase client config (keep local)
 /android/app/google-services.json
 /android/app/google-services (2).json
+lib/firebase_options.dart
 
