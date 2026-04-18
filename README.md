@@ -9,7 +9,7 @@ MentalBloom is a comprehensive Flutter application designed to support mental we
 ## 🌟 Live Demo
 
 **[View Live Demo](https://[your-deployment-link.com])**  
-*[Screenshot placeholder: Dashboard with mood visualization and AI chatbot interface]*
+*[ Dashboard with mood visualization and chatbot ]*
 
 ---
 
@@ -70,9 +70,9 @@ MentalBloom is a comprehensive Flutter application designed to support mental we
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone the repository** 
    ```bash
-   git clone https://github.com/[your-username]/mentalbloom.git
+   git clone https://github.com/Imen-rekik/mentalbloom.git
    cd mentalbloom
    ```
 
@@ -165,6 +165,23 @@ mentalbloom/
 
 ---
 
+## 🏗️ Architecture Diagram
+
+```mermaid
+flowchart TD
+   A[Flutter App UI\nScreens + Widgets] --> B[Provider State Layer\nFirebaseService]
+   B --> C[Firebase Auth\nLogin / Signup / Verification]
+   B --> D[Cloud Firestore\nUsers, Moods, Journals]
+   A --> E[AI Service]
+   E --> F[OpenRouter API\nLLM Responses]
+   A --> G[Feature Modules\nMood Tracker, Journal, Gratitude, Relax]
+   G --> B
+```
+
+This architecture keeps UI concerns in screens, business logic in services, and data/auth in Firebase, with AI features routed through the OpenRouter integration.
+
+---
+
 
 ## 🔧 Development
 
@@ -180,50 +197,11 @@ flutter build web        # Web build
 flutter test
 ```
 
-### Code Style
-This project follows [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style). Format code with:
-```bash
-dart format .
-```
-
----
-
-## 📋 Features Roadmap
-
-- [ ] Export journal entries as PDF
-- [ ] Dark mode support
-- [ ] Offline mode for journaling
-- [ ] Meditation timer with progress tracking
-- [ ] Community support features (opt-in, moderated)
-- [ ] Integration with wearables for stress monitoring
-- [ ] [Add your planned features here]
-
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit changes: `git commit -m 'Add your feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a Pull Request
-
----
-
-## ⚠️ Disclaimer
-
-**MentalBloom is a supportive wellness tool, not a substitute for professional mental health care.** If you're experiencing a mental health crisis, please reach out to:
-- **National Suicide Prevention Lifeline:** 988 (US)
-- **Crisis Text Line:** Text HOME to 741741
-- **International Association for Suicide Prevention:** https://www.iasp.info/resources/Crisis_Centres/
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
+Contributions are welcome!
 
 ---
 
@@ -231,11 +209,8 @@ This project is licensed under the [MIT License](LICENSE) - see the LICENSE file
 
 **Let's connect!**
 
-- **GitHub:** [@your-username](https://github.com/your-username)
-- **LinkedIn:** [your-linkedin-url](https://linkedin.com/in/your-profile)
-- **Email:** [your.email@example.com](mailto:your.email@example.com)
-- **Portfolio:** [your-portfolio-site.com](https://your-portfolio-site.com)
+- **GitHub:** https://github.com/Imen-rekik 
+- **LinkedIn:** https://www.linkedin.com/in/imen-rekik-36322b375/
+- **Email:** imen.rekik2026@gmail.com
 
 ---
-
-**Built with ❤️ to support your mental wellness journey.**

@@ -19,6 +19,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoginMode = true;
 
   void _handleSubmit() async {
+    if (isLoading) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
     setState(() {
       isLoading = true;
     });
@@ -36,8 +42,13 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      final message = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
       );
     } finally {
       if (mounted) {

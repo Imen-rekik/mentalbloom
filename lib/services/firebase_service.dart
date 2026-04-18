@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class FirebaseService extends ChangeNotifier {
+  static const Duration _authRequestTimeout = Duration(seconds: 20);
+
   //
   //
   //
@@ -203,9 +205,12 @@ class FirebaseService extends ChangeNotifier {
 
     UserCredential credential;
     try {
-      credential = await _auth.signInWithEmailAndPassword(
-        email: trimmedEmail,
-        password: password,
+      credential = await _auth
+          .signInWithEmailAndPassword(email: trimmedEmail, password: password)
+          .timeout(_authRequestTimeout);
+    } on TimeoutException {
+      throw Exception(
+        'Login timed out. Please check your internet connection and try again.',
       );
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e)); // friendly error message
@@ -247,10 +252,12 @@ class FirebaseService extends ChangeNotifier {
     }
 
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: trimmedEmail,
-        password: password,
-      );
+      final credential = await _auth
+          .createUserWithEmailAndPassword(
+            email: trimmedEmail,
+            password: password,
+          )
+          .timeout(_authRequestTimeout);
 
       final user = credential.user;
       if (user == null) {
@@ -265,6 +272,10 @@ class FirebaseService extends ChangeNotifier {
         'moodStreak': 0,
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+    } on TimeoutException {
+      throw Exception(
+        'Signup timed out. Please check your internet connection and try again.',
+      );
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e));
     } on FirebaseException catch (e) {
