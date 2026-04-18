@@ -1,24 +1,29 @@
 # MentalBloom
 
-**An AI-Powered Mental Wellness & Mood Tracking Application**
+![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Google Cloud Firestore](https://img.shields.io/badge/Google_Cloud_Firestore-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-AI_Powered-FF6B6B?style=for-the-badge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-MentalBloom is a comprehensive Flutter application designed to support mental well-being through intelligent mood tracking, AI-driven companionship, and mindfulness exercises. This project demonstrates the practical integration of Large Language Models (LLMs) into mobile user experiences.
+
+
+Mental health struggles are often invisible until they become overwhelming. MentalBloom is an AI-powered mobile wellness companion that helps users recognize emotional patterns early — through mood tracking, reflective journaling, and guided mindfulness.
+
+Built with Flutter and Firebase, it integrates OpenRouter to orchestrate multiple LLMs with automatic fallback logic when rate limits are hit. The AI layer uses a custom system prompt tuned for mental health safety, including emotion reflection rules and a crisis protocol.
+
+This project was built to explore the real challenges of integrating LLMs into a mobile app — model fallback, real-time data sync, and responsible AI design in a sensitive context.
 
 ---
 
-## 🌟 Live Demo
+## ▶️ Demo
 
-**[View Live Demo](https://[your-deployment-link.com])**  
-*[ Dashboard with mood visualization and chatbot ]*
+[![Watch the Demo](https://img.youtube.com/vi/Aog5Clst8ng/hqdefault.jpg)](https://www.youtube.com/watch?v=Aog5Clst8ng)
 
 ---
 
 ## 🛠 Tech Stack
-
-![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-AI_Powered-FF6B6B?style=for-the-badge)
 
 ### **Core Technologies**
 * **Flutter**: Cross-platform mobile framework used for building a high-performance, responsive UI.
@@ -57,6 +62,65 @@ MentalBloom is a comprehensive Flutter application designed to support mental we
 ### Authentication & Security
 - 🔐 Secure user authentication via Firebase
 - 🔒 Secure data storage via Google Cloud Firestore (journals, mood entries, user profiles)
+
+---
+
+## 🏗️ Architecture Diagram
+
+```mermaid
+flowchart TD
+   A[Flutter App UI\nScreens + Widgets] --> B[Provider State Layer\nFirebaseService]
+   B --> C[Firebase Auth\nLogin / Signup / Verification]
+   B --> D[Cloud Firestore\nUsers, Moods, Journals]
+   A --> E[AI Service]
+   E --> F[OpenRouter API\nLLM Responses]
+   A --> G[Feature Modules\nMood Tracker, Journal, Gratitude, Relax]
+   G --> B
+```
+
+---
+
+## 📸 Screenshots
+
+### Authentication
+<p align="center">
+   <img src="docs/images/1_login.png" width="30%" />
+   <img src="docs/images/2_sign_up.png" width="30%" />
+   <img src="docs/images/3_verification.png" width="30%" />
+</p>
+<p align="center">
+   <img src="docs/images/4_prefered_name.png" width="30%" />
+</p>
+
+### Dashboard & Mood Tracking
+<p align="center">
+   <img src="docs/images/5_dashboard.png" width="30%" />
+   <img src="docs/images/6_mood1.png" width="30%" />
+   <img src="docs/images/7_mood2.png" width="30%" />
+</p>
+<p align="center">
+   <img src="docs/images/12_mood.png" width="30%" />
+   <img src="docs/images/13_streak.png" width="30%" />
+</p>
+
+### Gratitude & Quotes
+<p align="center">
+   <img src="docs/images/8_gratitude_jar.png" width="30%" />
+   <img src="docs/images/9_quote.png" width="30%" />
+</p>
+
+### Journaling
+<p align="center">
+   <img src="docs/images/10_journals.png" width="30%" />
+   <img src="docs/images/11_diary_edit.png" width="30%" />
+</p>
+
+### Relaxation & AI Companion
+<p align="center">
+   <img src="docs/images/14_relax.png" width="30%" />
+   <img src="docs/images/15_breath.png" width="30%" />
+   <img src="docs/images/16_chatbot.png" width="30%" />
+</p>
 
 ---
 
@@ -116,7 +180,7 @@ MentalBloom is a comprehensive Flutter application designed to support mental we
    - This will create `lib/firebase_options.dart` with your project's credentials
    - Since Firebase security rules are strict, this file can be safely committed to version control
 
-5. **Run the app**
+6. **Run the app**
    ```bash
    flutter run
    ```
@@ -162,26 +226,6 @@ mentalbloom/
 ├── firebase.json                        # Firebase configuration
 └── README.md                            # This file
 ```
-
----
-
-## 🏗️ Architecture Diagram
-
-```mermaid
-flowchart TD
-   A[Flutter App UI\nScreens + Widgets] --> B[Provider State Layer\nFirebaseService]
-   B --> C[Firebase Auth\nLogin / Signup / Verification]
-   B --> D[Cloud Firestore\nUsers, Moods, Journals]
-   A --> E[AI Service]
-   E --> F[OpenRouter API\nLLM Responses]
-   A --> G[Feature Modules\nMood Tracker, Journal, Gratitude, Relax]
-   G --> B
-```
-
-This architecture keeps UI concerns in screens, business logic in services, and data/auth in Firebase, with AI features routed through the OpenRouter integration.
-
----
-
 
 ## 🔧 Development
 

@@ -39,11 +39,13 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(32, 24, 32, keyboardInset + 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

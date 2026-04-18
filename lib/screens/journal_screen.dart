@@ -42,9 +42,9 @@ class _JournalScreenState extends State<JournalScreen> {
     // filter journals based on search
     final filteredJournals = journals.where((j) {
       final title = j['title']?.toLowerCase() ?? "";
-      final content = j['content']?.toLowerCase() ?? "";
+      final date = j['date']?.toLowerCase() ?? "";
       final search = searchQuery.toLowerCase();
-      return title.contains(search) || content.contains(search);
+      return title.contains(search) || date.contains(search);
     }).toList();
 
     //
@@ -91,7 +91,7 @@ class _JournalScreenState extends State<JournalScreen> {
               child: TextField(
                 onChanged: (val) => setState(() => searchQuery = val),
                 decoration: const InputDecoration(
-                  hintText: 'Search entries...',
+                  hintText: 'Search by title or date...',
                   hintStyle: TextStyle(color: AppColors.textLight),
                   prefixIcon: Icon(Icons.search, color: AppColors.textLight),
                   border: InputBorder.none,
@@ -105,11 +105,10 @@ class _JournalScreenState extends State<JournalScreen> {
             //
             // Journal List
             Expanded(
-              child: firebaseService.isJournalsLoading &&
+              child:
+                  firebaseService.isJournalsLoading &&
                       !firebaseService.hasLoadedJournals
-                  ? const Center(
-                      child: CircularProgressIndicator(),
-                    )
+                  ? const Center(child: CircularProgressIndicator())
                   : filteredJournals.isEmpty
                   ? const Center(
                       child: Text(

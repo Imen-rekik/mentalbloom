@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../services/ai_service.dart';
 
-
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
 
@@ -55,7 +54,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     final response = await _aiService.sendMessage(text);
 
-
     if (!mounted) return;
     setState(() {
       _messages.add({'sender': 'bot', 'text': response});
@@ -98,66 +96,74 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       ),
       //
       // chat
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isUser = msg['sender'] == 'user';
+          Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = _messages[index];
+                    final isUser = msg['sender'] == 'user';
 
-                return Align(
-                  alignment: isUser
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUser ? AppColors.primary : AppColors.white,
-                      borderRadius: BorderRadius.circular(16).copyWith(
-                        bottomRight: isUser
-                            ? const Radius.circular(0)
-                            : const Radius.circular(16),
-                        bottomLeft: !isUser
-                            ? const Radius.circular(0)
-                            : const Radius.circular(16),
+                    return Align(
+                      alignment: isUser
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isUser ? AppColors.primary : AppColors.white,
+                          borderRadius: BorderRadius.circular(16).copyWith(
+                            bottomRight: isUser
+                                ? const Radius.circular(0)
+                                : const Radius.circular(16),
+                            bottomLeft: !isUser
+                                ? const Radius.circular(0)
+                                : const Radius.circular(16),
+                          ),
+                          boxShadow: isUser
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.12),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                        ),
+                        child: Text(
+                          msg['text'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textMain,
+                          ),
+                        ),
                       ),
-                      boxShadow: isUser
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                    ),
-                    child: Text(
-                      msg['text'],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textMain,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+              _buildMessageInput(),
+            ],
           ),
-          //
-          //
-          //
-          // loading indicator
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(color: AppColors.primary),
+            const Positioned(
+              right: 16,
+              bottom: 96,
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
-          _buildMessageInput(),
         ],
       ),
     );

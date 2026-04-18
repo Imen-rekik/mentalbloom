@@ -131,6 +131,8 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final safeBottom = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -153,7 +155,7 @@ class _JournalEditorScreenState extends State<JournalEditorScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, safeBottom + 24),
         child: Column(
           children: [
             TextField(

@@ -463,64 +463,81 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
           // Title and Toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Emotion Distribution",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
+              const Expanded(
+                child: Text(
+                  "Emotion Distribution",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMain,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: ['Today', 'This Week'].map((filter) {
-                    final isSelected = _timeFilter == filter;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _timeFilter = filter;
-                          _touchedPieIndex = -1;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.textMain
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 4,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Text(
-                          filter,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : AppColors.textLight,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            fontSize: 12,
-                          ),
-                        ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        children: ['Today', 'This Week'].map((filter) {
+                          final isSelected = _timeFilter == filter;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _timeFilter = filter;
+                                _touchedPieIndex = -1;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.textMain
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          blurRadius: 4,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Text(
+                                filter,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.textLight,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
                 ),
               ),
             ],
