@@ -417,6 +417,41 @@ class FirebaseService extends ChangeNotifier {
     return moodSnapshot.docs.first.data()['label'] as String?;
   }
 
+  Future<List<Map<String, dynamic>>> getMoodsForLast14Days() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final now = DateTime.now();
+    final thirteenDaysAgo = now.subtract(const Duration(days: 13));
+    final startOf14DaysAgo = DateTime(
+      thirteenDaysAgo.year,
+      thirteenDaysAgo.month,
+      thirteenDaysAgo.day,
+    );
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('moods')
+        .where(
+          'createdAt',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOf14DaysAgo),
+        )
+        .orderBy('createdAt', descending: false)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'label': data['label'] as String?,
+        'intensity': (data['intensity'] as num?)?.toInt(),
+        'notes': data['notes'] as String?,
+        'symptoms': (data['symptoms'] as List?)?.map((e) => e.toString()).toList(),
+        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+      };
+    }).toList();
+  }
+
   Future<List<Map<String, dynamic>>> getMoodsForLast7Days() async {
     final user = _auth.currentUser;
     if (user == null) return [];
@@ -591,6 +626,39 @@ class FirebaseService extends ChangeNotifier {
       r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$",
     );
     return emailRegExp.hasMatch(email);
+  }
+
+  //
+  // AI Summary methods
+  Future<String?> getDailySummary(String dateStr) async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final doc = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('ai_summaries')
+        .doc(dateStr)
+        .get();
+
+    if (doc.exists) {
+      return doc.data()?['summary'] as String?;
+    }
+    return null;
+  }
+
+  Future<void> saveDailySummary(String dateStr, String summary) async {
+    final user = _requireUser();
+    
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('ai_summaries')
+        .doc(dateStr)
+        .set({
+      'summary': summary,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   @override
