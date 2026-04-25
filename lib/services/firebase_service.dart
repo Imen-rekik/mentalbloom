@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'notification_scheduler.dart';
+
 class FirebaseService extends ChangeNotifier {
   static const Duration _authRequestTimeout = Duration(seconds: 20);
 
@@ -345,7 +347,7 @@ class FirebaseService extends ChangeNotifier {
   //
   //
   // mood methods
-  Future<void> saveMood(String label, int intensity) async {
+  Future<void> saveMood(String label, int intensity, {String? notes, List<String>? symptoms}) async {
     final user = _requireUser();
     final userRef = _firestore.collection('users').doc(user.uid);
     final moodRef = userRef.collection('moods').doc();
@@ -386,12 +388,17 @@ class FirebaseService extends ChangeNotifier {
       transaction.set(moodRef, {
         'label': label,
         'intensity': intensity,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (symptoms != null && symptoms.isNotEmpty) 'symptoms': symptoms,
         'createdAt': FieldValue.serverTimestamp(),
       });
     });
 
     _moodStreak = updatedStreak;
     notifyListeners();
+
+    await NotificationScheduler.instance
+        .cancelMorningReminderForTodayIfBeforeNine();
   }
 
   Future<String?> getLatestMoodLabel() async {

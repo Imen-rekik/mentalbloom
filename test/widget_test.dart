@@ -5,15 +5,12 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mentalbloom/main.dart';
 
 void main() {
-  testWidgets('shows the login screen by default', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('shows the login screen by default', (WidgetTester tester) async {
     await tester.pumpWidget(const MentalBloomApp());
     await tester.pumpAndSettle();
 

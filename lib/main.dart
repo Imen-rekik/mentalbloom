@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'services/firebase_service.dart';
+import 'services/notification_scheduler.dart';
 import 'screens/login_screen.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/name_entry_screen.dart';
@@ -15,6 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationScheduler.instance.initialize();
 
   // provider to inject the auth service
   runApp(

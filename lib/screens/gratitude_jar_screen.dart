@@ -1,9 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_colors.dart';
 import '../services/firebase_service.dart';
 import '../services/ai_service.dart';
-
 
 class GratitudeJarScreen extends StatefulWidget {
   const GratitudeJarScreen({super.key});
@@ -13,52 +12,53 @@ class GratitudeJarScreen extends StatefulWidget {
 }
 
 class _GratitudeJarScreenState extends State<GratitudeJarScreen>
-    with SingleTickerProviderStateMixin {
-  // for animation
-  late AnimationController _animController;
+    with TickerProviderStateMixin {
+  late AnimationController _shakeController;
+  late AnimationController _floatController;
   late Animation<double> _shakeAnimation;
-  final AIService _aiService = AIService();
+  late Animation<double> _floatAnimation;
 
+  final AIService _aiService = AIService();
   bool _isGenerating = false;
-  //
-  //
-  //
+
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
+
+    // Shake animation for interaction
+    _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
     );
 
-    //
-    //
-    // shake
     _shakeAnimation =
         TweenSequence<double>([
-          TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.08), weight: 1),
-          TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.08), weight: 2),
-          TweenSequenceItem(tween: Tween(begin: 0.08, end: -0.08), weight: 2),
-          TweenSequenceItem(tween: Tween(begin: -0.08, end: 0.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.05), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -0.05, end: 0.05), weight: 2),
+          TweenSequenceItem(tween: Tween(begin: 0.05, end: -0.05), weight: 2),
+          TweenSequenceItem(tween: Tween(begin: -0.05, end: 0.0), weight: 1),
         ]).animate(
-          CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
         );
+
+    // Floating/Breathing animation for the premium look
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOutSine),
+    );
   }
 
-  //
-  //
-  //
-  // dispose
   @override
   void dispose() {
-    _animController.dispose();
+    _shakeController.dispose();
+    _floatController.dispose();
     super.dispose();
   }
 
-  //
-  //
-  //
-  // reveal gratitude
   void _revealGratitude() async {
     if (_isGenerating) return;
 
@@ -67,68 +67,32 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
     });
 
     try {
-      // 1. Shake the jar
-       _animController.forward(from: 0.0);
+      // Trigger the physical shake feeling
+      _shakeController.forward(from: 0.0);
 
-      // 2. Get context: Latest mood from Firebase
-      final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+      final firebaseService = Provider.of<FirebaseService>(
+        context,
+        listen: false,
+      );
       final mood = await firebaseService.getLatestMoodLabel() ?? "Neutral";
 
-      // 3. Generate Quote from Gemini
       final quote = await _aiService.generateMoodQuote(mood);
-
 
       if (!mounted) return;
 
-      // 4. Show the result
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
-        builder: (context) {
-          return Container(
-            padding: const EdgeInsets.all(32),
-            decoration: const BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(40),
-                topRight: Radius.circular(40),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text("🌸", style: TextStyle(fontSize: 60)),
-                const SizedBox(height: 24),
-                Text(
-                  "A Message for your $mood Mood",
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textMain,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '"$quote"',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.textLight,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 48),
-              ],
-            ),
-          );
-        },
+        isScrollControlled: true,
+        builder: (context) => _buildPremiumQuoteSheet(context, mood, quote),
       );
     } catch (e) {
-       if (!mounted) return;
-       ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(content: Text("The jar is shy right now. Try again in a moment!")),
-       );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("The jar is taking a brief rest. Please try again!"),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -138,215 +102,289 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
     }
   }
 
-  //
-  //
-  //
-  //
+  Widget _buildPremiumQuoteSheet(
+    BuildContext context,
+    String mood,
+    String quote,
+  ) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.65,
+      ),
+      padding: const EdgeInsets.only(top: 32, left: 32, right: 32, bottom: 48),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40),
+          topRight: Radius.circular(40),
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 30, spreadRadius: 10),
+        ],
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 50,
+              height: 5,
+              margin: const EdgeInsets.only(bottom: 30),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const Icon(Icons.auto_awesome, color: Color(0xFF2F8AE5), size: 48),
+            const SizedBox(height: 24),
+            Text(
+              "Your Daily Insight".toUpperCase(),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade500,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '"$quote"',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                fontStyle: FontStyle.italic,
+                color: Color(0xFF1E293B),
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2F8AE5).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                "Reflecting on your $mood mood",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2F8AE5),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         title: const Text(
-          'Daily Gratitude',
+          'Daily Insight',
           style: TextStyle(
-            color: AppColors.textMain,
-            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        centerTitle: true,
+        backgroundColor: const Color(0xFF5B9EF4), // Solid Light Blue
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textMain),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Need a little boost?",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textMain,
+      body: Stack(
+        children: [
+          // Elegant minimal background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              "Tap the jar to get an AI-generated boost.",
-              style: TextStyle(fontSize: 16, color: AppColors.textLight),
+          ),
+
+          // Subtle glowing orb behind jar
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.35,
+            left: MediaQuery.of(context).size.width * 0.15,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF2F8AE5).withValues(alpha: 0.15),
+                backgroundBlendMode: BlendMode.overlay,
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                child: Container(color: Colors.transparent),
+              ),
             ),
-            const SizedBox(height: 60),
-            //
-            //
-            //
-            // jar
-            GestureDetector(
-              onTap: _revealGratitude,
-              child: AnimatedBuilder(
-                animation: _animController,
-                builder: (context, child) {
-                  return Transform.rotate(
-                    angle: _shakeAnimation.value,
-                    alignment: Alignment.bottomCenter,
-                    child: child,
-                  );
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    //
-                    //
-                    // Jar Lid
-                    Container(
-                      width: 140,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB0BEC5),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: const Color(0xFF90A4AE),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 120,
-                          height: 4,
-                          color: Colors.black.withValues(alpha: 0.05),
-                        ), // Line texture
-                      ),
-                    ),
+          ),
 
-                    //
-                    //
-                    // Jar Neck
-                    Container(
-                      width: 120,
-                      height: 15,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.8),
-                        border: const Border(
-                          left: BorderSide(color: Colors.white, width: 4),
-                          right: BorderSide(color: Colors.white, width: 4),
-                        ),
-                      ),
+          SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Need a moment of clarity?",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.5,
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Tap the vessel to reveal your personalized insight.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 70),
 
-                    //
-                    //
-                    // Jar Body
-                    Container(
-                      width: 220,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(40),
-                        border: Border.all(color: Colors.white, width: 6),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color.fromARGB(
-                              255,
-                              249,
-                              97,
-                              97,
-                            ).withValues(alpha: 0.13),
-                            blurRadius: 55,
-                            spreadRadius: 6,
-                            offset: const Offset(0, 18),
+                  // The Premium "Jar" (Vessel)
+                  GestureDetector(
+                    onTap: _revealGratitude,
+                    child: AnimatedBuilder(
+                      animation: Listenable.merge([
+                        _shakeController,
+                        _floatController,
+                      ]),
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _floatAnimation.value),
+                          child: Transform.rotate(
+                            angle: _shakeAnimation.value,
+                            alignment: Alignment.bottomCenter,
+                            child: child,
                           ),
-                        ],
-                      ),
+                        );
+                      },
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          if (_isGenerating)
-                            const Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          //
-                          //
-                          // shadow reflection for glass
-                          Positioned(
-                            left: 10,
-                            top: 20,
-                            child: Container(
-                              width: 15,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                          // Base glow shadow
+                          Container(
+                            width: 170,
+                            height: 280,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(50),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF2F8AE5,
+                                  ).withValues(alpha: 0.3),
+                                  blurRadius: 40,
+                                  spreadRadius: -10,
+                                  offset: const Offset(0, 20),
+                                ),
+                              ],
                             ),
                           ),
 
-                          // Flowers physically residing at the bottom
-                          const Positioned(
-                            bottom: 10,
-                            left: 30,
-                            child: Text("🌸", style: TextStyle(fontSize: 45)),
-                          ),
-                          const Positioned(
-                            bottom: 15,
-                            right: 35,
-                            child: Text("🌷", style: TextStyle(fontSize: 40)),
-                          ),
-                          const Positioned(
-                            bottom: 55,
-                            left: 55,
-                            child: Text("🌼", style: TextStyle(fontSize: 35)),
-                          ),
-                          const Positioned(
-                            bottom: 60,
-                            right: 30,
-                            child: Text("🌺", style: TextStyle(fontSize: 45)),
-                          ),
-                          const Positioned(
-                            bottom: 25,
-                            child: Text("🌻", style: TextStyle(fontSize: 48)),
-                          ),
-                          const Positioned(
-                            bottom: 75,
-                            left: 80,
-                            child: Text("💐", style: TextStyle(fontSize: 40)),
-                          ),
-
-                          //
-                          //
-                          //
-                          // Label "Gratitude"
-                          Positioned(
-                            top: 60,
-                            child: Container(
-                              width: 130,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
+                          // Glassmorphism body
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Container(
+                                width: 170,
+                                height: 280,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.6),
+                                      Colors.white.withValues(alpha: 0.1),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                ],
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Internal elegant glow particles
+                                    Positioned(
+                                      top: 40,
+                                      right: 30,
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                        ),
+                                      ).applyBlur(),
+                                    ),
+                                    Positioned(
+                                      bottom: 60,
+                                      left: 40,
+                                      child: Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color(
+                                            0xFF2F8AE5,
+                                          ).withValues(alpha: 0.2),
+                                        ),
+                                      ).applyBlur(),
+                                    ),
+
+                                    // Status indicator
+                                    if (_isGenerating)
+                                      const SizedBox(
+                                        width: 50,
+                                        height: 50,
+                                        child: CircularProgressIndicator(
+                                          color: Color(0xFF2F8AE5),
+                                          strokeWidth: 3,
+                                        ),
+                                      )
+                                    else
+                                      const Icon(
+                                        Icons.bubble_chart,
+                                        color: Colors.white,
+                                        size: 80,
+                                      ),
+                                  ],
+                                ),
                               ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                "Gratitude",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textMain,
-                                  letterSpacing: 1.2,
+                            ),
+                          ),
+
+                          // Glass top rim
+                          Positioned(
+                            top: 0,
+                            child: Container(
+                              width: 100,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                borderRadius: const BorderRadius.only(
+                                  bottomLeft: Radius.circular(10),
+                                  bottomRight: Radius.circular(10),
                                 ),
                               ),
                             ),
@@ -354,14 +392,24 @@ class _GratitudeJarScreenState extends State<GratitudeJarScreen>
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 80),
+                ],
               ),
             ),
-            const SizedBox(height: 80),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+// Helper extension for the internal blur
+extension on Widget {
+  Widget applyBlur() {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+      child: this,
     );
   }
 }

@@ -4,7 +4,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'breath_screen.dart';
 
 class RelaxScreen extends StatefulWidget {
-  const RelaxScreen({super.key});
+  final bool autoScrollToSounds;
+  
+  const RelaxScreen({super.key, this.autoScrollToSounds = false});
 
   @override
   State<RelaxScreen> createState() => _RelaxScreenState();
@@ -17,6 +19,7 @@ class _RelaxScreenState extends State<RelaxScreen> {
   bool _isLoading = false;
   bool _isPlaying = false;
   String? _errorMessage;
+  final ScrollController _scrollController = ScrollController();
 
   // Sound mapping uses bundled assets only.
   final List<Map<String, String>> _sounds = [
@@ -46,11 +49,24 @@ class _RelaxScreenState extends State<RelaxScreen> {
     _audioPlayer.onLog.listen((msg) {
       debugPrint("AudioPlayer Log: $msg");
     });
+
+    if (widget.autoScrollToSounds) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            400.0,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -112,10 +128,23 @@ class _RelaxScreenState extends State<RelaxScreen> {
       backgroundColor: bgColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (Navigator.canPop(context))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: InkWell(
+                    onTap: () => Navigator.pop(context),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      ],
+                    ),
+                  ),
+                ),
               const Text(
                 'Relax & Breathe',
                 style: TextStyle(

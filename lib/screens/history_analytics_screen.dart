@@ -133,17 +133,6 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     return _moods; // 'This Week'
   }
 
-  Map<String, int> _getEmotionCounts() {
-    final counts = <String, int>{for (var e in _emotionColors.keys) e: 0};
-    for (final m in _filteredMoods) {
-      final label = m['label'] as String?;
-      if (label != null && counts.containsKey(label)) {
-        counts[label] = counts[label]! + 1;
-      }
-    }
-    return counts;
-  }
-
   @override
   Widget build(BuildContext context) {
     final streak = Provider.of<FirebaseService>(context).moodStreak;
