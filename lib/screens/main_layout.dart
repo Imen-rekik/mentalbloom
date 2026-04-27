@@ -8,6 +8,7 @@ import 'dashboard_screen.dart';
 import 'journal_screen.dart';
 import 'relax_screen.dart';
 import 'chatbot_screen.dart';
+import 'podcast_screen.dart';
 import 'notification_permission_prompt.dart';
 
 class MainLayout extends StatefulWidget {
@@ -108,6 +109,7 @@ class MainLayoutState extends State<MainLayout> with WidgetsBindingObserver {
     final screens = [
       DashboardScreen(key: _dashboardKey),
       const ChatbotScreen(),
+      const PodcastScreen(),
       const JournalScreen(),
       const RelaxScreen(),
     ];
@@ -140,6 +142,10 @@ class MainLayoutState extends State<MainLayout> with WidgetsBindingObserver {
           BottomNavigationBarItem(
             icon: Icon(Icons.forum_outlined),
             label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.headphones),
+            label: 'Podcasts',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu_book),

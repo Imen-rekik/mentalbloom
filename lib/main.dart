@@ -11,7 +11,7 @@ import 'screens/login_screen.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/name_entry_screen.dart';
 import 'screens/main_layout.dart';
-
+import 'services/podcast_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -21,7 +21,10 @@ Future<void> main() async {
   // provider to inject the auth service
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => FirebaseService())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => FirebaseService()),
+        ChangeNotifierProvider(create: (_) => PodcastProvider()),
+      ],
       child: const MentalBloomApp(),
     ),
   );

@@ -452,6 +452,29 @@ class FirebaseService extends ChangeNotifier {
     }).toList();
   }
 
+  Future<List<Map<String, dynamic>>> getAllMoods() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('moods')
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'label': data['label'] as String?,
+        'intensity': (data['intensity'] as num?)?.toInt(),
+        'notes': data['notes'] as String?,
+        'symptoms': (data['symptoms'] as List?)?.map((e) => e.toString()).toList(),
+        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+      };
+    }).toList();
+  }
+
   Future<List<Map<String, dynamic>>> getMoodsForLast7Days() async {
     final user = _auth.currentUser;
     if (user == null) return [];

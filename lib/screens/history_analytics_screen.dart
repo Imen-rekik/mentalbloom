@@ -30,11 +30,11 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
   };
 
   final Map<String, String> _emotionEmojis = {
-    'Happy': '😊',
-    'Neutral': '😐',
-    'Sad': '😢',
-    'Anxious': '😰',
-    'Angry': '😠',
+    'Happy': '✨',
+    'Neutral': '⚖️',
+    'Sad': '🌧️',
+    'Anxious': '🌪️',
+    'Angry': '🔥',
   };
 
   final Map<String, bool> _activeEmotions = {
@@ -45,6 +45,8 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     'Angry': true,
   };
 
+  DateTime? _selectedListDate;
+
   @override
   void initState() {
     super.initState();
@@ -54,7 +56,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
   Future<void> _fetchData() async {
     final service = Provider.of<FirebaseService>(context, listen: false);
     await service.loadJournals(); // Ensure journals are loaded for the summary
-    final moods = await service.getMoodsForLast14Days();
+    final moods = await service.getAllMoods();
 
     // Sort newest first
     moods.sort((a, b) {
@@ -69,7 +71,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
         _moods = moods;
         _isLoading = false;
       });
-      _loadOrGenerateSummaries(service);
+      _loadSummaries(service);
     }
   }
 
@@ -101,12 +103,16 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     return '$hour:$minStr $ampm';
   }
 
+  String _formatDateKey(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
   Map<String, List<Map<String, dynamic>>> get _groupedMoods {
     final grouped = <String, List<Map<String, dynamic>>>{};
     for (final mood in _moods) {
       final date = mood['createdAt'] as DateTime?;
       if (date != null) {
-        final dateStr = _formatDate(date);
+        final dateStr = _formatDateKey(date);
         if (!grouped.containsKey(dateStr)) {
           grouped[dateStr] = [];
         }
@@ -116,66 +122,62 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     return grouped;
   }
 
-  Future<void> _loadOrGenerateSummaries(FirebaseService service) async {
+  Future<void> _loadSummaries(FirebaseService service) async {
     final grouped = _groupedMoods;
     for (final dateStr in grouped.keys) {
-      final existingSummary = await service.getDailySummary(dateStr);
-      if (existingSummary != null && existingSummary.isNotEmpty) {
-        if (mounted) {
-          setState(() {
-            _aiSummaries[dateStr] = existingSummary;
-          });
-        }
-      } else {
+      if (!_aiSummaries.containsKey(dateStr)) {
         if (mounted) {
           setState(() {
             _summaryLoading[dateStr] = true;
           });
         }
-
-        final moods = grouped[dateStr]!;
-        String userDataText = "MOOD LOGS:\n";
-        for (var m in moods) {
-          final time = _formatTime(m['createdAt'] as DateTime);
-          final label = m['label'];
-          final intensity = m['intensity'];
-          final notes = m['notes'] ?? 'None';
-          final symptoms = (m['symptoms'] as List?)?.join(', ') ?? 'None';
-          userDataText +=
-              "- At $time: Mood=$label, Intensity=$intensity/10, Notes=$notes, Symptoms=$symptoms\n";
-        }
-
-        // Add journals if available for this date
-        final dailyJournals = service.journals
-            .where(
-              (j) =>
-                  j['date'] == dateStr ||
-                  (j['date']?.contains(dateStr) ?? false),
-            )
-            .toList();
-        if (dailyJournals.isNotEmpty) {
-          userDataText += "\nJOURNAL ENTRIES:\n";
-          for (var j in dailyJournals) {
-            userDataText += "- ${j['title']}: ${j['content']}\n";
+        
+        final existingSummary = await service.getDailySummary(dateStr);
+        
+        if (existingSummary != null && existingSummary.isNotEmpty) {
+          if (mounted) {
+            setState(() {
+              _aiSummaries[dateStr] = existingSummary;
+              _summaryLoading[dateStr] = false;
+            });
           }
-        }
+        } else {
+          // Generate summary for this day if entries exist but no summary is saved yet
+          final moods = grouped[dateStr]!;
+          String userDataText = "MOOD LOGS:\n";
+          for (var m in moods.reversed) {
+            final time = _formatTime(m['createdAt'] as DateTime);
+            final label = m['label'];
+            final intensity = m['intensity'];
+            final notes = m['notes'] ?? 'None';
+            final symptoms = (m['symptoms'] as List?)?.join(', ') ?? 'None';
+            userDataText += "- At $time: Mood=$label, Intensity=$intensity/10, Notes=$notes, Symptoms=$symptoms\n";
+          }
 
-        final summary = await _moodSummaryService.generateDailySummary(
-          dateStr,
-          userDataText,
-        );
-
-        if (summary.isNotEmpty && !summary.startsWith('Summary unavailable')) {
-          await service.saveDailySummary(dateStr, summary);
-        }
-
-        if (mounted) {
-          setState(() {
-            if (summary.isNotEmpty) {
-              _aiSummaries[dateStr] = summary;
+          final dailyJournals = service.journals
+              .where((j) => j['date'] == dateStr || (j['date']?.contains(dateStr) ?? false))
+              .toList();
+          if (dailyJournals.isNotEmpty) {
+            userDataText += "\nJOURNAL ENTRIES:\n";
+            for (var j in dailyJournals) {
+              userDataText += "- ${j['title']}: ${j['content']}\n";
             }
-            _summaryLoading[dateStr] = false;
-          });
+          }
+
+          final summary = await _moodSummaryService.generateDailySummary(dateStr, userDataText);
+
+          if (summary.isNotEmpty && !summary.startsWith('Summary unavailable')) {
+            await service.saveDailySummary(dateStr, summary);
+          }
+
+          if (mounted) {
+            setState(() {
+              if (summary.isNotEmpty) {
+                _aiSummaries[dateStr] = summary;
+              }
+              _summaryLoading[dateStr] = false;
+            });
+          }
         }
       }
     }
@@ -267,15 +269,6 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                 children: [
                   _buildMultiLineChart(),
                   const SizedBox(height: 32),
-                  const Text(
-                    "Daily Mood Logs",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   _buildDailyLogList(),
                   const SizedBox(height: 40),
                 ],
@@ -359,12 +352,19 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             child: SizedBox(
-              width: 800, // Wide enough to show 14 days comfortably
-              height: 250,
+              width: 1000, // Increased width for more spacing between days
+              height: 400, // Increased height significantly
               child: BarChart(
                 BarChartData(
                   minY: 0,
                   maxY: 10,
+                  barTouchData: BarTouchData(
+                    touchTooltipData: BarTouchTooltipData(
+                      fitInsideVertically: true,
+                      fitInsideHorizontally: true,
+                      tooltipMargin: 8,
+                    ),
+                  ),
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
@@ -388,15 +388,16 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        reservedSize: 42,
                         getTitlesWidget: (value, meta) {
                           final daysAgo = 13 - value.toInt();
                           return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
+                            padding: const EdgeInsets.only(top: 12.0),
                             child: Text(
                               _getShortDayName(daysAgo),
                               style: const TextStyle(
                                 color: AppColors.textLight,
-                                fontSize: 12,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -407,46 +408,31 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        interval: 2,
                         reservedSize: 32,
                         getTitlesWidget: (value, meta) {
+                          if (value == 0) return const SizedBox.shrink();
+                          Widget textWidget = Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(
+                                color: AppColors.textLight,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          );
+                          
                           if (value == 10) {
                             return Transform.translate(
-                              offset: const Offset(0, 12),
-                              child: const Padding(
-                                padding: EdgeInsets.only(right: 8.0),
-                                child: RotatedBox(
-                                  quarterTurns: 3,
-                                  child: Text(
-                                    "HIGH",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          } else if (value == 0) {
-                            return Transform.translate(
-                              offset: const Offset(0, -12),
-                              child: const Padding(
-                                padding: EdgeInsets.only(right: 8.0),
-                                child: RotatedBox(
-                                  quarterTurns: 3,
-                                  child: Text(
-                                    "LOW",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              offset: const Offset(0, 6),
+                              child: textWidget,
                             );
                           }
-                          return const SizedBox.shrink();
+                          
+                          return textWidget;
                         },
                       ),
                     ),
@@ -461,13 +447,13 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
                           BarChartRodData(
                             toY: avg,
                             color: _emotionColors[emotion],
-                            width: 2,
+                            width: 6, // Thicker bars to make them more visible
                             borderRadius: BorderRadius.circular(0),
                           ),
                         );
                       }
                     }
-                    return BarChartGroupData(x: i, barsSpace: 1, barRods: rods);
+                    return BarChartGroupData(x: i, barsSpace: 2, barRods: rods);
                   }),
                 ),
               ),
@@ -554,52 +540,188 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
       );
     }
 
+    final datesToShow = <String>[];
+    if (_selectedListDate != null) {
+      final s = _formatDateKey(_selectedListDate!);
+      datesToShow.add(s); // Always add it to show the empty state if missing
+    } else {
+      final today = DateTime.now();
+      final yesterday = today.subtract(const Duration(days: 1));
+      final tStr = _formatDateKey(today);
+      final yStr = _formatDateKey(yesterday);
+      if (grouped.containsKey(tStr)) datesToShow.add(tStr);
+      if (grouped.containsKey(yStr)) datesToShow.add(yStr);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: grouped.entries.map((entry) {
-        final dateStr = entry.key;
-        final dayMoods = entry.value;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
-                child: Text(
-                  dateStr,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textLight,
-                  ),
-                ),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Daily Mood Logs",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF2F8AE5), // Primary blue
               ),
-              Container(
+            ),
+            InkWell(
+              onTap: () async {
+                DateTime initial = _selectedListDate ?? DateTime.now();
+                if (!grouped.containsKey(_formatDateKey(initial))) {
+                  initial = DateTime.parse(grouped.keys.first);
+                }
+                
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: initial,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                  initialEntryMode: DatePickerEntryMode.calendarOnly,
+                );
+                if (picked != null) {
+                  setState(() {
+                    _selectedListDate = picked;
+                  });
+                }
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFC9A8F1), Color(0xFF8EB4F8)],
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
+                      color: const Color(0xFF8EB4F8).withValues(alpha: 0.4),
+                      blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Column(
+                child: Row(
                   children: [
-                    ...dayMoods.map((m) => _buildMoodTile(m)),
-                    _buildAISummaryCard(dateStr),
+                    const Icon(Icons.calendar_month, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      _selectedListDate != null
+                          ? _formatDate(_selectedListDate!)
+                          : "Pick a day",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (_selectedListDate != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedListDate = null;
+                          });
+                        },
+                        child: const Icon(Icons.close, color: Colors.white, size: 20),
+                      ),
+                    ],
                   ],
                 ),
               ),
-            ],
-          ),
-        );
-      }).toList(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (datesToShow.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text(
+                "No mood entries for this day",
+                style: TextStyle(color: AppColors.textLight, fontSize: 16),
+              ),
+            ),
+          )
+        else
+          ...datesToShow.map((dateStr) {
+            final dayMoods = grouped[dateStr];
+            
+            final parsedDate = DateTime.tryParse(dateStr);
+            final displayDate = parsedDate != null ? _formatDate(parsedDate) : dateStr;
+            
+            if (dayMoods == null || dayMoods.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: Center(
+                  child: Text(
+                    "No mood entries for this day",
+                    style: TextStyle(color: AppColors.textLight, fontSize: 16),
+                  ),
+                ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
+                    child: Text(
+                      displayDate,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildAISummaryCard(dateStr),
+                        ...dayMoods.reversed.map((m) => _buildMoodTile(m)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+      ],
     );
+  }
+
+  List<Color> _getFaceGradient(String label) {
+    switch (label) {
+      case 'Happy':
+        return const [Color(0xFFFFD89E), Color(0xFFFFB347)];
+      case 'Sad':
+        return const [Color(0xFF9EC5F8), Color(0xFF5B9EF4)];
+      case 'Anxious':
+        return const [Color(0xFFD4A8F5), Color(0xFFAA6DD6)];
+      case 'Angry':
+        return const [Color(0xFFFFB0AD), Color(0xFFE86B6B)];
+      case 'Neutral':
+      default:
+        return const [Color(0xFFC9A8F1), Color(0xFF8EB4F8)];
+    }
   }
 
   Widget _buildMoodTile(Map<String, dynamic> mood) {
@@ -607,8 +729,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     final timeStr = date != null ? _formatTime(date) : '';
     final label = mood['label'] as String? ?? 'Neutral';
     final intensity = mood['intensity'] as int? ?? 5;
-    final color = _emotionColors[label] ?? Colors.grey;
-    final emoji = _emotionEmojis[label] ?? '😐';
+    final gradient = _getFaceGradient(label);
 
     return InkWell(
       onTap: () => _showMoodDetailDialog(mood),
@@ -622,14 +743,19 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [color.withValues(alpha: 0.5), color],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: gradient,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient.last.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 24)),
-              ),
+              child: CustomPaint(painter: _HistoryMoodFacePainter(moodLabel: label)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -873,5 +999,209 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
         );
       },
     );
+  }
+}
+
+class _HistoryMoodFacePainter extends CustomPainter {
+  const _HistoryMoodFacePainter({required this.moodLabel});
+
+  final String moodLabel;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    // Scale everything down to fit a 48x48 circle (which has radius 24)
+    // Original face was drawn for a 145x145 circle. Scale factor ~ 48/145 ≈ 0.33
+    const scale = 0.33;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale);
+
+    final eyePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.82)
+      ..strokeWidth = 4.0 / scale
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final mouthPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.85)
+      ..strokeWidth = 4.2 / scale
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final browPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.55)
+      ..strokeWidth = 3.0 / scale
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    const leftEye = Offset(-22, -8);
+    const rightEye = Offset(22, -8);
+
+    switch (moodLabel) {
+      case 'Happy':
+        canvas.drawArc(
+          Rect.fromCenter(center: leftEye, width: 18, height: 12),
+          3.14159,
+          3.14159,
+          false,
+          eyePaint,
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: rightEye, width: 18, height: 12),
+          3.14159,
+          3.14159,
+          false,
+          eyePaint,
+        );
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: const Offset(0, 16),
+            width: 38,
+            height: 26,
+          ),
+          0.15 * 3.14159,
+          0.7 * 3.14159,
+          false,
+          mouthPaint,
+        );
+        break;
+
+      case 'Neutral':
+        canvas.drawArc(
+          Rect.fromCenter(center: leftEye, width: 18, height: 10),
+          3.14159,
+          3.14159,
+          false,
+          eyePaint,
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: rightEye, width: 18, height: 10),
+          3.14159,
+          3.14159,
+          false,
+          eyePaint,
+        );
+        canvas.drawLine(
+          const Offset(-13, 18),
+          const Offset(13, 18),
+          mouthPaint,
+        );
+        break;
+
+      case 'Sad':
+        canvas.drawLine(
+          leftEye + const Offset(-8, 1),
+          leftEye + const Offset(8, -1),
+          eyePaint,
+        );
+        canvas.drawLine(
+          rightEye + const Offset(-8, -1),
+          rightEye + const Offset(8, 1),
+          eyePaint,
+        );
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: const Offset(0, 26),
+            width: 32,
+            height: 22,
+          ),
+          3.14159,
+          3.14159 - 0.1,
+          false,
+          mouthPaint,
+        );
+        break;
+
+      case 'Anxious':
+        canvas.drawArc(
+          Rect.fromCenter(center: leftEye, width: 16, height: 10),
+          0,
+          3.14159 * 2,
+          false,
+          Paint()
+            ..color = Colors.white.withValues(alpha: 0.82)
+            ..strokeWidth = 3.0 / scale
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke,
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: rightEye, width: 16, height: 10),
+          0,
+          3.14159 * 2,
+          false,
+          Paint()
+            ..color = Colors.white.withValues(alpha: 0.82)
+            ..strokeWidth = 3.0 / scale
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke,
+        );
+        final wavePath = Path()
+          ..moveTo(-14, 18)
+          ..cubicTo(
+            -7,
+            14,
+            7,
+            22,
+            14,
+            18,
+          );
+        canvas.drawPath(wavePath, mouthPaint);
+        canvas.drawLine(
+          leftEye + const Offset(-6, -12),
+          leftEye + const Offset(6, -17),
+          browPaint,
+        );
+        canvas.drawLine(
+          rightEye + const Offset(-6, -17),
+          rightEye + const Offset(6, -12),
+          browPaint,
+        );
+        break;
+
+      case 'Angry':
+        canvas.drawLine(
+          leftEye + const Offset(-8, 1),
+          leftEye + const Offset(8, -1),
+          eyePaint,
+        );
+        canvas.drawLine(
+          rightEye + const Offset(-8, -1),
+          rightEye + const Offset(8, 1),
+          eyePaint,
+        );
+        canvas.drawLine(
+          const Offset(-11, 20),
+          const Offset(11, 20),
+          mouthPaint,
+        );
+        canvas.drawLine(
+          leftEye + const Offset(-7, -15),
+          leftEye + const Offset(7, -8),
+          Paint()
+            ..color = Colors.white.withValues(alpha: 0.55)
+            ..strokeWidth = 3.5 / scale
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke,
+        );
+        canvas.drawLine(
+          rightEye + const Offset(-7, -8),
+          rightEye + const Offset(7, -15),
+          Paint()
+            ..color = Colors.white.withValues(alpha: 0.55)
+            ..strokeWidth = 3.5 / scale
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke,
+        );
+        break;
+    }
+    
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _HistoryMoodFacePainter oldDelegate) {
+    return oldDelegate.moodLabel != moodLabel;
   }
 }

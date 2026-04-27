@@ -6,7 +6,7 @@ import 'relax_screen.dart';
 void showQuickReliefModal(BuildContext context) {
   showDialog(
     context: context,
-    useRootNavigator: true, 
+    useRootNavigator: true,
     barrierColor: Colors.black.withValues(alpha: 0.85),
     builder: (BuildContext context) {
       return const QuickReliefOverlay();
@@ -36,7 +36,7 @@ class QuickReliefOverlay extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Central circle area
                 Container(
                   width: 340,
@@ -54,16 +54,26 @@ class QuickReliefOverlay extends StatelessWidget {
                         label: 'Talk it out',
                         color: const Color(0xFF5B9EF4), // App blue
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ChatbotScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 24),
                       _OptionButton(
                         icon: Icons.edit_note,
                         label: 'Write it down',
-                        color: const Color(0xFFF472B6), // App pink 
+                        color: const Color(0xFFF472B6), // App pink
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalScreen()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const JournalScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 24),
@@ -72,7 +82,12 @@ class QuickReliefOverlay extends StatelessWidget {
                         label: 'Take a breath',
                         color: const Color(0xFF8EB4F8), // App light blue
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RelaxScreen()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RelaxScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 24),
@@ -81,13 +96,18 @@ class QuickReliefOverlay extends StatelessWidget {
                         label: 'Calming sounds',
                         color: const Color(0xFFC9A8F1), // App purple
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RelaxScreen()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RelaxScreen(),
+                            ),
+                          );
                         },
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 50),
 
                 // White X button at bottom

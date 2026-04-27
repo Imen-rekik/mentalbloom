@@ -5,7 +5,7 @@ import 'breath_screen.dart';
 
 class RelaxScreen extends StatefulWidget {
   final bool autoScrollToSounds;
-  
+
   const RelaxScreen({super.key, this.autoScrollToSounds = false});
 
   @override

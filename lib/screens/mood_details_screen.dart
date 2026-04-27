@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/firebase_service.dart';
+import '../services/mood_summary_service.dart';
 import 'gratitude_jar_screen.dart';
 
 class MoodDetailsScreen extends StatefulWidget {
@@ -110,6 +111,48 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
         'timestamp': DateTime.now().toIso8601String(),
       }));
       await prefs.setStringList('local_moods', existingMoods);
+
+      // Trigger AI Summary in background for today (force update after every submit)
+      Future.microtask(() async {
+        try {
+          final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+          final moods = await service.getMoodsForLast14Days();
+          final todayMoods = moods.where((m) {
+            final date = m['createdAt'] as DateTime?;
+            if (date == null) return false;
+            // Compare local date strings
+            return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}" == todayStr;
+          }).toList();
+          
+          String userDataText = "MOOD LOGS:\n";
+          for (var m in todayMoods.reversed) {
+            final d = m['createdAt'] as DateTime?;
+            final time = d != null ? "${d.hour}:${d.minute.toString().padLeft(2, '0')}" : "";
+            final label = m['label'];
+            final intensity = m['intensity'];
+            final notes = m['notes'] ?? 'None';
+            final symptoms = (m['symptoms'] as List?)?.join(', ') ?? 'None';
+            userDataText += "- At $time: Mood=$label, Intensity=$intensity/10, Notes=$notes, Symptoms=$symptoms\n";
+          }
+          
+          await service.loadJournals();
+          final dailyJournals = service.journals.where((j) => j['date'] == todayStr || (j['date']?.contains(todayStr) ?? false)).toList();
+          if (dailyJournals.isNotEmpty) {
+            userDataText += "\nJOURNAL ENTRIES:\n";
+            for (var j in dailyJournals) {
+              userDataText += "- ${j['title']}: ${j['content']}\n";
+            }
+          }
+          
+          final moodSummaryService = MoodSummaryService();
+          final summary = await moodSummaryService.generateDailySummary(todayStr, userDataText);
+          if (summary.isNotEmpty && !summary.startsWith('Summary unavailable')) {
+            await service.saveDailySummary(todayStr, summary);
+          }
+        } catch (_) {
+          // ignore background errors
+        }
+      });
 
       if (!mounted) return;
 

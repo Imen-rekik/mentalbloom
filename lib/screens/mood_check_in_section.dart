@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../services/firebase_service.dart';
 import '../theme/app_colors.dart';
 import 'history_analytics_screen.dart';
 import 'mood_details_screen.dart';
@@ -128,8 +130,7 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
     final angle = math.atan2(vector.dy, vector.dx);
     final relative = _clampToDialArc(angle);
     final step = _dialSweepAngle / (_moods.length - 1);
-    final selectedIndex =
-        (relative / step).round().clamp(0, _moods.length - 1);
+    final selectedIndex = (relative / step).round().clamp(0, _moods.length - 1);
 
     if (selectedIndex != _selectedIndex) {
       setState(() {
@@ -137,8 +138,7 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
       });
       // Trigger a little bounce on mood change
       _bounceAnim = Tween<double>(begin: 0.92, end: 1.0).animate(
-        CurvedAnimation(
-            parent: _bounceController, curve: Curves.easeOutBack),
+        CurvedAnimation(parent: _bounceController, curve: Curves.easeOutBack),
       );
       _bounceController.forward(from: 0);
     }
@@ -146,14 +146,27 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
 
   Widget _buildDateTimeWidget() {
     final now = DateTime.now();
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final dateStr = 'Today, ${now.day} ${months[now.month - 1]}';
     final hour = now.hour.toString().padLeft(2, '0');
     final minute = now.minute.toString().padLeft(2, '0');
     final timeStr = '$hour:$minute';
 
     // A teal-blue color inspired by the photo and the dashboard's palette
-    const color = Color(0xFF28B491); 
+    const color = Color(0xFF28B491);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -176,7 +189,12 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
         Container(
           padding: const EdgeInsets.only(bottom: 2),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: color.withValues(alpha: 0.6), width: 1.2)),
+            border: Border(
+              bottom: BorderSide(
+                color: color.withValues(alpha: 0.6),
+                width: 1.2,
+              ),
+            ),
           ),
           child: Text(
             text,
@@ -188,7 +206,6 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
             ),
           ),
         ),
-        Icon(Icons.arrow_drop_down, color: color, size: 22),
       ],
     );
   }
@@ -245,14 +262,14 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTapDown: (details) {
-              final box = _dialAreaKey.currentContext?.findRenderObject()
-                  as RenderBox?;
+              final box =
+                  _dialAreaKey.currentContext?.findRenderObject() as RenderBox?;
               if (box == null) return;
               _updateFromLocalPosition(details.localPosition, box.size);
             },
             onPanUpdate: (details) {
-              final box = _dialAreaKey.currentContext?.findRenderObject()
-                  as RenderBox?;
+              final box =
+                  _dialAreaKey.currentContext?.findRenderObject() as RenderBox?;
               if (box == null) return;
               _updateFromLocalPosition(details.localPosition, box.size);
             },
@@ -263,8 +280,7 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
                 builder: (context, constraints) {
                   final size = Size(constraints.maxWidth, 260);
                   // Where the face left edge starts
-                  final faceLeftEdge =
-                      size.width / 2 + _dialCenterXOffset - 72;
+                  final faceLeftEdge = size.width / 2 + _dialCenterXOffset - 72;
                   return Stack(
                     children: [
                       // ── Background headline word (left of circle) ──
@@ -341,8 +357,10 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
               onTap: _openMoodDetails,
               child: Container(
                 constraints: const BoxConstraints(minWidth: 280),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 18,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.circular(22),
@@ -378,7 +396,71 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
             ),
           ),
 
-
+          // ── Fire Streak ──
+          const SizedBox(height: 20),
+          Builder(
+            builder: (context) {
+              final streak = context.watch<FirebaseService>().moodStreak;
+              final streakText = streak > 0
+                  ? "$streak-day streak! "
+                  : "Start your streak! ";
+              final subtitleText = streak > 0
+                  ? "Keep it up!"
+                  : "Log a mood to begin";
+              return Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFB74D).withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("🔥", style: TextStyle(fontSize: 16)),
+                      const SizedBox(width: 6),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: streakText,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE65100),
+                              ),
+                            ),
+                            TextSpan(
+                              text: subtitleText,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFFF57C00),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -402,7 +484,10 @@ class _MoodDialThumb extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        final center = Offset(size.width / 2 + _MoodCheckInSectionState._dialCenterXOffset, size.height / 2);
+        final center = Offset(
+          size.width / 2 + _MoodCheckInSectionState._dialCenterXOffset,
+          size.height / 2,
+        );
         final radius = size.shortestSide / 2 - 30;
         const step = _MoodCheckInSectionState._dialSweepAngle / 4;
         final angle =
@@ -720,7 +805,10 @@ class _MoodDialPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2 + _MoodCheckInSectionState._dialCenterXOffset, size.height / 2);
+    final center = Offset(
+      size.width / 2 + _MoodCheckInSectionState._dialCenterXOffset,
+      size.height / 2,
+    );
     final radius = size.shortestSide / 2 - 30;
     final rect = Rect.fromCircle(center: center, radius: radius);
     const step = _MoodCheckInSectionState._dialSweepAngle / 4;
