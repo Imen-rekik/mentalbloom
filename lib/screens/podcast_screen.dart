@@ -11,58 +11,57 @@ class PodcastScreen extends StatefulWidget {
 }
 
 class _PodcastScreenState extends State<PodcastScreen> {
-
   final List<PodcastEpisode> _allEpisodes = const [
     PodcastEpisode(
-      title: "How stress rewires your brain",
+      title: "Tools for Managing Stress & Anxiety",
       podcastName: "Andrew Huberman",
       durationMin: 48,
-      audioUrl: "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+      audioUrl: "assets/audio/1_Tools_Stress_Anxiety.mp3",
       emoji: "🧠",
       bgColor: Color(0xFFEEEDFE),
       textColor: Color(0xFF534AB7),
     ),
     PodcastEpisode(
-      title: "Meditation for people who hate it",
-      podcastName: "Dan Harris",
+      title: "Maximize Physical & Mental Health",
+      podcastName: "Andrew Huberman",
       durationMin: 32,
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      audioUrl: "assets/audio/2_Max_Mental_Health.mp3",
       emoji: "😄",
       bgColor: Color(0xFFEAF3DE),
       textColor: Color(0xFF3B6D11),
     ),
     PodcastEpisode(
-      title: "5 tools to calm anxiety fast",
-      podcastName: "Emma McAdam",
+      title: "Erasing Fears & Traumas",
+      podcastName: "Andrew Huberman",
       durationMin: 24,
-      audioUrl: "https://codeskulptor-demos.commondatastorage.googleapis.com/pang/paza-moduless.mp3",
+      audioUrl: "assets/audio/3_Erasing_Fears_Traumas.mp3",
       emoji: "🛋️",
       bgColor: Color(0xFFFBEAF0),
       textColor: Color(0xFF993556),
     ),
     PodcastEpisode(
       title: "Honest talk about the hard days",
-      podcastName: "Paul Gilmartin",
+      podcastName: "Nora McInerny",
       durationMin: 41,
-      audioUrl: "https://codeskulptor-demos.commondatastorage.googleapis.com/descent/gotitem.mp3",
+      audioUrl: "assets/audio/6_story.mp3",
       emoji: "🗣️",
       bgColor: Color(0xFFFAEEDA),
       textColor: Color(0xFF854F0B),
     ),
     PodcastEpisode(
-      title: "How to Optimize Your Sleep",
+      title: "The Science of Gratitude & How to Build a Gratitude Practice",
       podcastName: "Andrew Huberman",
       durationMin: 55,
-      audioUrl: "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+      audioUrl: "assets/audio/4_Gratitude_Practice.mp3",
       emoji: "🌙",
       bgColor: Color(0xFFE8EAF6),
       textColor: Color(0xFF3949AB),
     ),
     PodcastEpisode(
-      title: "Using Meditation to Focus, Work & Create Better",
+      title: "Understanding & Conquering Depression ",
       podcastName: "Andrew Huberman",
       durationMin: 37,
-      audioUrl: "https://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3",
+      audioUrl: "assets/audio/5_Conquering_Depression.mp3",
       emoji: "🧘",
       bgColor: Color(0xFFE0F2F1),
       textColor: Color(0xFF00695C),
@@ -71,7 +70,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -82,7 +80,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
         ),
         flexibleSpace: ClipRRect(
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(32),
+          ),
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -106,10 +106,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
             ),
             Text(
               "for your wellbeing",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.white70),
             ),
           ],
         ),
@@ -118,37 +115,38 @@ class _PodcastScreenState extends State<PodcastScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-            Consumer<PodcastProvider>(
-              builder: (context, provider, child) {
-                if (provider.currentEpisode != null) {
-                  return _buildNowPlayingCard(provider);
-                }
-                return const SizedBox.shrink();
+          Consumer<PodcastProvider>(
+            builder: (context, provider, child) {
+              if (provider.currentEpisode != null) {
+                return _buildNowPlayingCard(provider);
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _allEpisodes.length,
+              itemBuilder: (context, index) {
+                final episode = _allEpisodes[index];
+                return _buildEpisodeCard(episode, context);
               },
             ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: _allEpisodes.length,
-                itemBuilder: (context, index) {
-                  final episode = _allEpisodes[index];
-                  return _buildEpisodeCard(episode, context);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
-
-
   Widget _buildNowPlayingCard(PodcastProvider provider) {
     final episode = provider.currentEpisode!;
-    double progress = 0.0;
-    if (provider.duration.inSeconds > 0) {
-      progress = provider.position.inSeconds / provider.duration.inSeconds;
-    }
+    final maxSeconds = provider.duration.inSeconds > 0
+        ? provider.duration.inSeconds.toDouble()
+        : 1.0;
+    final positionSeconds = provider.position.inSeconds.toDouble().clamp(
+      0.0,
+      maxSeconds,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -177,7 +175,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
-                    child: Text(episode.emoji, style: const TextStyle(fontSize: 30)),
+                    child: Text(
+                      episode.emoji,
+                      style: const TextStyle(fontSize: 30),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -208,12 +209,23 @@ class _PodcastScreenState extends State<PodcastScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: AlwaysStoppedAnimation<Color>(episode.textColor),
-              borderRadius: BorderRadius.circular(4),
-              minHeight: 6,
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 6,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                activeTrackColor: episode.textColor,
+                inactiveTrackColor: Colors.grey.shade200,
+                thumbColor: episode.textColor,
+              ),
+              child: Slider(
+                min: 0,
+                max: maxSeconds,
+                value: positionSeconds,
+                onChanged: (value) {
+                  provider.seek(Duration(seconds: value.round()));
+                },
+              ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -221,44 +233,46 @@ class _PodcastScreenState extends State<PodcastScreen> {
               children: [
                 Text(
                   provider.formatDuration(provider.position),
-                  style: const TextStyle(fontSize: 10, color: AppColors.textLight),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textLight,
+                  ),
                 ),
                 Text(
                   provider.formatDuration(provider.duration),
-                  style: const TextStyle(fontSize: 10, color: AppColors.textLight),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textLight,
+                  ),
                 ),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.fast_rewind),
-                  color: AppColors.textMain,
-                  onPressed: () => provider.skipBackward15(),
-                ),
                 Container(
                   decoration: BoxDecoration(
                     color: episode.textColor,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: Icon(provider.isPlaying ? Icons.pause : Icons.play_arrow),
+                    icon: Icon(
+                      provider.isPlaying ? Icons.pause : Icons.play_arrow,
+                    ),
                     color: Colors.white,
                     iconSize: 32,
                     onPressed: () {
                       if (provider.isPlaying) {
                         provider.pause();
                       } else {
-                        provider.playEpisode(episode);
+                        if (provider.currentEpisode == episode) {
+                          provider.resume();
+                        } else {
+                          provider.playEpisode(episode);
+                        }
                       }
                     },
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.fast_forward),
-                  color: AppColors.textMain,
-                  onPressed: () => provider.skipForward15(),
                 ),
               ],
             ),
@@ -269,7 +283,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   Widget _buildEpisodeCard(PodcastEpisode episode, BuildContext context) {
-    final isCurrentlyPlaying = context.watch<PodcastProvider>().currentEpisode == episode;
+    final isCurrentlyPlaying =
+        context.watch<PodcastProvider>().currentEpisode == episode;
 
     return GestureDetector(
       onTap: () {
@@ -302,7 +317,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
-                child: Text(episode.emoji, style: const TextStyle(fontSize: 32)),
+                child: Text(
+                  episode.emoji,
+                  style: const TextStyle(fontSize: 32),
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -331,7 +349,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-
                       const SizedBox(width: 8),
                       Text(
                         "${episode.durationMin} min",

@@ -75,12 +75,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - .env
-    - assets/audio/q.mp3
-    - assets/audio/rain.mp3
-    - assets/audio/forest.mp3
-    - assets/audio/ocean.mp3
-    - assets/audio/fire.mp3
-    - assets/audio/river.mp3
+    - assets/audio/
 
 
 

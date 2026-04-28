@@ -5,6 +5,7 @@ class PodcastEpisode {
   final String title;
   final String podcastName;
   final int durationMin;
+  // Supports either local asset paths (assets/...) or network URLs.
   final String audioUrl;
   final String emoji;
   final Color bgColor;
@@ -48,6 +49,12 @@ class PodcastProvider extends ChangeNotifier {
       _position = newPosition;
       notifyListeners();
     });
+
+    _audioPlayer.onPlayerComplete.listen((_) {
+      _isPlaying = false;
+      _position = _duration;
+      notifyListeners();
+    });
   }
 
   Future<void> playEpisode(PodcastEpisode episode) async {
@@ -60,9 +67,14 @@ class PodcastProvider extends ChangeNotifier {
         minutes: episode.durationMin,
       ); // fallback before load
       notifyListeners();
-      await _audioPlayer.play(UrlSource(episode.audioUrl));
+
+      if (_isLocalAssetPath(episode.audioUrl)) {
+        await _audioPlayer.play(AssetSource(_toAssetSourcePath(episode.audioUrl)));
+      } else {
+        await _audioPlayer.play(UrlSource(episode.audioUrl));
+      }
     } else {
-      await _audioPlayer.resume();
+      await resume();
     }
   }
 
@@ -70,18 +82,41 @@ class PodcastProvider extends ChangeNotifier {
     await _audioPlayer.pause();
   }
 
+  Future<void> resume() async {
+    await _audioPlayer.resume();
+  }
+
   Future<void> seek(Duration position) async {
-    await _audioPlayer.seek(position);
+    final clamped = _clampToDuration(position);
+    await _audioPlayer.seek(clamped);
   }
 
   Future<void> skipForward15() async {
-    final target = _position + const Duration(seconds: 15);
-    await seek(target > _duration ? _duration : target);
+    await seek(_position + const Duration(seconds: 15));
   }
 
   Future<void> skipBackward15() async {
-    final target = _position - const Duration(seconds: 15);
-    await seek(target < Duration.zero ? Duration.zero : target);
+    await seek(_position - const Duration(seconds: 15));
+  }
+
+  bool _isLocalAssetPath(String value) {
+    return value.startsWith('assets/');
+  }
+
+  String _toAssetSourcePath(String fullAssetPath) {
+    return fullAssetPath.startsWith('assets/')
+        ? fullAssetPath.substring('assets/'.length)
+        : fullAssetPath;
+  }
+
+  Duration _clampToDuration(Duration value) {
+    if (value < Duration.zero) {
+      return Duration.zero;
+    }
+    if (_duration > Duration.zero && value > _duration) {
+      return _duration;
+    }
+    return value;
   }
 
   String formatDuration(Duration d) {
