@@ -208,7 +208,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
         } else {
           final sum = emotionMoods.fold(
             0,
-            (prev, m) => prev + ((m['intensity'] as int?) ?? 0),
+            (prev, m) => prev + ((m['intensity'] as num?)?.toInt() ?? 0),
           );
           dailyAvgs[emotion] = sum / emotionMoods.length;
         }
@@ -547,9 +547,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     } else {
       final today = DateTime.now();
       final yesterday = today.subtract(const Duration(days: 1));
-      final tStr = _formatDateKey(today);
       final yStr = _formatDateKey(yesterday);
-      if (grouped.containsKey(tStr)) datesToShow.add(tStr);
       if (grouped.containsKey(yStr)) datesToShow.add(yStr);
     }
 
@@ -728,7 +726,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
     final date = mood['createdAt'] as DateTime?;
     final timeStr = date != null ? _formatTime(date) : '';
     final label = mood['label'] as String? ?? 'Neutral';
-    final intensity = mood['intensity'] as int? ?? 5;
+    final intensity = (mood['intensity'] as num?)?.toInt() ?? 5;
     final gradient = _getFaceGradient(label);
 
     return InkWell(
@@ -864,7 +862,7 @@ class _HistoryAnalyticsScreenState extends State<HistoryAnalyticsScreen> {
 
   void _showMoodDetailDialog(Map<String, dynamic> mood) {
     final label = mood['label'] as String? ?? 'Neutral';
-    final intensity = mood['intensity'] as int? ?? 5;
+    final intensity = (mood['intensity'] as num?)?.toInt() ?? 5;
     final notes = mood['notes'] as String?;
     final symptomsList = mood['symptoms'] as List?;
     final color = _emotionColors[label] ?? Colors.grey;

@@ -5,7 +5,6 @@ class PodcastEpisode {
   final String title;
   final String podcastName;
   final int durationMin;
-  // Supports either local asset paths (assets/...) or network URLs.
   final String audioUrl;
   final String emoji;
   final Color bgColor;
@@ -65,7 +64,7 @@ class PodcastProvider extends ChangeNotifier {
       _position = Duration.zero;
       _duration = Duration(
         minutes: episode.durationMin,
-      ); // fallback before load
+      );
       notifyListeners();
 
       if (_isLocalAssetPath(episode.audioUrl)) {

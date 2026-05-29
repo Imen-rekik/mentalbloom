@@ -33,8 +33,10 @@ class FirebaseService extends ChangeNotifier {
   String _currentUserEmail = '';
   String _currentUserName = '';
   int _moodStreak = 0;
+  int _longestStreak = 0;
 
   final List<Map<String, String>> _journals = <Map<String, String>>[];
+  final List<Map<String, dynamic>> _chatMessages = <Map<String, dynamic>>[];
   //
   // getters and methods
   bool get isLoggedIn => _isLoggedIn;
@@ -46,7 +48,10 @@ class FirebaseService extends ChangeNotifier {
   bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
   List<Map<String, String>> get journals =>
       List<Map<String, String>>.unmodifiable(_journals);
+  List<Map<String, dynamic>> get chatMessages =>
+      List<Map<String, dynamic>>.unmodifiable(_chatMessages);
   int get moodStreak => _moodStreak;
+  int get longestStreak => _longestStreak;
   bool get isUnverified =>
       _auth.currentUser != null && !_auth.currentUser!.emailVerified;
   //
@@ -106,9 +111,11 @@ class FirebaseService extends ChangeNotifier {
     _currentUserEmail = '';
     _currentUserName = '';
     _moodStreak = 0;
+    _longestStreak = 0;
     _isJournalsLoading = false;
     _hasLoadedJournals = false;
     _journals.clear();
+    _chatMessages.clear();
   }
 
   //
@@ -121,7 +128,17 @@ class FirebaseService extends ChangeNotifier {
     final userData = userDoc.data() ?? <String, dynamic>{};
 
     _currentUserName = (userData['name'] as String?)?.trim() ?? '';
-    _moodStreak = (userData['moodStreak'] as num?)?.toInt() ?? 0;
+    final rawStreak = userData['moodStreak'];
+    _moodStreak = (rawStreak is num) ? rawStreak.toInt() : 0;
+
+    final rawLongest = userData['longestStreak'];
+    _longestStreak = (rawLongest is num) ? rawLongest.toInt() : 0;
+
+    // If longestStreak was never saved, seed it from current streak
+    if (_longestStreak < _moodStreak) {
+      _longestStreak = _moodStreak;
+      await userRef.set({'longestStreak': _longestStreak}, SetOptions(merge: true));
+    }
 
     // if user logs in after more than 1 day, reset streak to 0
     final lastEntryTs = userData['lastEntryDate'] as Timestamp?;
@@ -272,6 +289,7 @@ class FirebaseService extends ChangeNotifier {
         'email': trimmedEmail,
         'name': '',
         'moodStreak': 0,
+        'longestStreak': 0,
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } on TimeoutException {
@@ -353,6 +371,7 @@ class FirebaseService extends ChangeNotifier {
     final moodRef = userRef.collection('moods').doc();
 
     int updatedStreak = 0;
+    int newLongest = 0;
     final now = DateTime.now();
 
     await _firestore.runTransaction((transaction) async {
@@ -379,8 +398,13 @@ class FirebaseService extends ChangeNotifier {
         }
       }
 
+      // Update longest streak if current exceeds it
+      final savedLongest = (data['longestStreak'] as num?)?.toInt() ?? 0;
+      newLongest = updatedStreak > savedLongest ? updatedStreak : savedLongest;
+
       transaction.set(userRef, {
         'moodStreak': updatedStreak,
+        'longestStreak': newLongest,
         'lastEntryDate': Timestamp.fromDate(now),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -394,6 +418,7 @@ class FirebaseService extends ChangeNotifier {
       });
     });
 
+    _longestStreak = newLongest;
     _moodStreak = updatedStreak;
     notifyListeners();
 
@@ -444,7 +469,7 @@ class FirebaseService extends ChangeNotifier {
       final data = doc.data();
       return {
         'label': data['label'] as String?,
-        'intensity': (data['intensity'] as num?)?.toInt(),
+        'intensity': (data['intensity'] as num?)?.toInt() ?? 5,
         'notes': data['notes'] as String?,
         'symptoms': (data['symptoms'] as List?)?.map((e) => e.toString()).toList(),
         'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
@@ -467,7 +492,7 @@ class FirebaseService extends ChangeNotifier {
       final data = doc.data();
       return {
         'label': data['label'] as String?,
-        'intensity': (data['intensity'] as num?)?.toInt(),
+        'intensity': (data['intensity'] as num?)?.toInt() ?? 5,
         'notes': data['notes'] as String?,
         'symptoms': (data['symptoms'] as List?)?.map((e) => e.toString()).toList(),
         'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
@@ -501,9 +526,9 @@ class FirebaseService extends ChangeNotifier {
     return snapshot.docs.map((doc) {
       final data = doc.data();
       return {
-        'label': data['label'] as String?,
-        'intensity': (data['intensity'] as num?)?.toInt(),
-        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+        'label': data['label'] as String? ?? 'Neutral',
+        'intensity': (data['intensity'] as num?)?.toInt() ?? 5, // Default to mid-intensity if null
+        'createdAt': (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       };
     }).toList();
   }
@@ -688,5 +713,102 @@ class FirebaseService extends ChangeNotifier {
   void dispose() {
     _authSubscription.cancel();
     super.dispose();
+  }
+
+  //
+  //
+  // Chat History methods
+  void initChatIfNeeded() {
+    if (_chatMessages.isEmpty) {
+      _chatMessages.add({
+        'sender': 'bot',
+        'text': 'Hello! I am here to listen. How are you feeling today?',
+      });
+      notifyListeners();
+      _saveInitialBotMessage();
+    }
+  }
+
+  Future<void> _saveInitialBotMessage() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final date = DateTime.now().toIso8601String().split('T').first;
+    final messagesRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('chatSessions')
+        .doc(date)
+        .collection('messages');
+    final docRef = messagesRef.doc();
+    await docRef.set({
+      'messageId': docRef.id,
+      'role': 'assistant',
+      'content': 'Hello! I am here to listen. How are you feeling today?',
+      'timestamp': FieldValue.serverTimestamp(),
+      'date': date,
+    });
+  }
+
+  Future<void> saveChatMessage(String role, String content) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    
+    // update local state
+    _chatMessages.add({
+      'sender': role == 'user' ? 'user' : 'bot',
+      'text': content,
+    });
+    notifyListeners();
+
+    // save to firestore
+    final date = DateTime.now().toIso8601String().split('T').first;
+    final messagesRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('chatSessions')
+        .doc(date)
+        .collection('messages');
+        
+    final docRef = messagesRef.doc();
+    await docRef.set({
+      'messageId': docRef.id,
+      'role': role,
+      'content': content,
+      'timestamp': FieldValue.serverTimestamp(),
+      'date': date,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getTodayChatHistory(String userId, String date) async {
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('chatSessions')
+        .doc(date)
+        .collection('messages')
+        .orderBy('timestamp')
+        .get();
+        
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  //
+  // Community Helpers
+  Future<List<Map<String, dynamic>>> getMyComments(String userId) async {
+    final snapshot = await _firestore
+        .collectionGroup('comments')
+        .where('userId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['commentId'] = doc.id;
+      // To get the postId, we can look at the reference path
+      // Path: communityPosts/{postId}/comments/{commentId}
+      final parentPostRef = doc.reference.parent.parent;
+      data['postId'] = parentPostRef?.id;
+      return data;
+    }).toList();
   }
 }

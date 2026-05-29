@@ -13,8 +13,8 @@ class PodcastScreen extends StatefulWidget {
 class _PodcastScreenState extends State<PodcastScreen> {
   final List<PodcastEpisode> _allEpisodes = const [
     PodcastEpisode(
-      title: "Tools for Managing Stress & Anxiety",
-      podcastName: "Andrew Huberman",
+      title: "Andrew Huberman",
+      podcastName: "Tools for Managing Stress & Anxiety",
       durationMin: 48,
       audioUrl: "assets/audio/1_Tools_Stress_Anxiety.mp3",
       emoji: "🧠",
@@ -22,8 +22,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
       textColor: Color(0xFF534AB7),
     ),
     PodcastEpisode(
-      title: "Maximize Physical & Mental Health",
-      podcastName: "Andrew Huberman",
+      title: "Andrew Huberman",
+      podcastName: "Maximize Physical & Mental Health",
       durationMin: 32,
       audioUrl: "assets/audio/2_Max_Mental_Health.mp3",
       emoji: "😄",
@@ -31,8 +31,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
       textColor: Color(0xFF3B6D11),
     ),
     PodcastEpisode(
-      title: "Erasing Fears & Traumas",
-      podcastName: "Andrew Huberman",
+      title: "Andrew Huberman",
+      podcastName: "Erasing Fears & Traumas",
       durationMin: 24,
       audioUrl: "assets/audio/3_Erasing_Fears_Traumas.mp3",
       emoji: "🛋️",
@@ -40,8 +40,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
       textColor: Color(0xFF993556),
     ),
     PodcastEpisode(
-      title: "Honest talk about the hard days",
-      podcastName: "Nora McInerny",
+      title: "Nora McInerny",
+      podcastName: "Honest talk about the hard days",
       durationMin: 41,
       audioUrl: "assets/audio/6_story.mp3",
       emoji: "🗣️",
@@ -49,8 +49,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
       textColor: Color(0xFF854F0B),
     ),
     PodcastEpisode(
-      title: "The Science of Gratitude & How to Build a Gratitude Practice",
-      podcastName: "Andrew Huberman",
+      title: "Andrew Huberman",
+      podcastName:
+          "The Science of Gratitude & How to Build a Gratitude Practice",
       durationMin: 55,
       audioUrl: "assets/audio/4_Gratitude_Practice.mp3",
       emoji: "🌙",
@@ -58,11 +59,11 @@ class _PodcastScreenState extends State<PodcastScreen> {
       textColor: Color(0xFF3949AB),
     ),
     PodcastEpisode(
-      title: "Understanding & Conquering Depression ",
-      podcastName: "Andrew Huberman",
+      title: "Andrew Huberman",
+      podcastName: "Understanding & Conquering Depression ",
       durationMin: 37,
       audioUrl: "assets/audio/5_Conquering_Depression.mp3",
-      emoji: "🧘",
+      emoji: "😄",
       bgColor: Color(0xFFE0F2F1),
       textColor: Color(0xFF00695C),
     ),

@@ -51,3 +51,15 @@ app.*.map.json
 /android/app/google-services.json
 /android/app/google-services (2).json
 
+build/
+.dart_tool/
+.flutter-plugins
+.pub-cache/
+# Clear out Flutter build artifacts
+.dart_tool/
+build/
+.packages
+.pub-cache/
+.pub/
+*.apk
+*.dill

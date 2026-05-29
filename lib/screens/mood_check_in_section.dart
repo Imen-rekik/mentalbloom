@@ -130,7 +130,8 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
     final angle = math.atan2(vector.dy, vector.dx);
     final relative = _clampToDialArc(angle);
     final step = _dialSweepAngle / (_moods.length - 1);
-    final selectedIndex = (relative / step).round().clamp(0, _moods.length - 1);
+    final rawIndex = (relative / step).round();
+    final selectedIndex = (rawIndex as int).clamp(0, _moods.length - 1);
 
     if (selectedIndex != _selectedIndex) {
       setState(() {
@@ -396,68 +397,122 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
             ),
           ),
 
-          // ── Fire Streak ──
+          // ── Streak Row ──
           const SizedBox(height: 20),
           Builder(
             builder: (context) {
-              final streak = context.watch<FirebaseService>().moodStreak;
-              final streakText = streak > 0
-                  ? "$streak-day streak! "
-                  : "Start your streak! ";
-              final subtitleText = streak > 0
-                  ? "Keep it up!"
-                  : "Log a mood to begin";
-              return Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFFB74D).withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+              final service = context.watch<FirebaseService>();
+              final streak = service.moodStreak;
+              final longest = service.longestStreak;
+
+              // Robust formatting to handle potential nulls during initialization
+              String _formatDays(dynamic n) {
+                final count = n is int ? n : 0;
+                return count == 1 ? '1 day' : '$count days';
+              }
+
+              return Row(
+                children: [
+                  // ── Current Streak 🔥 ──
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text("🔥", style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 6),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: streakText,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFFE65100),
-                              ),
-                            ),
-                            TextSpan(
-                              text: subtitleText,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFFF57C00),
-                              ),
-                            ),
-                          ],
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFB74D).withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("🔥", style: TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDays(streak),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            "Current",
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFFF57C00),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+
+                  const SizedBox(width: 12),
+
+                  // ── Best Streak 🏆 ──
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFB74D).withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("🏆", style: TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDays(longest),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            "Best",
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFFF57C00),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),

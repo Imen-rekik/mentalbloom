@@ -30,9 +30,16 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
       'minLabel': 'not happy',
       'maxLabel': 'extremely happy',
       'symptoms': <String>[
-        "High energy", "Smiling", "Feeling motivated", "Feeling grateful", 
-        "Wanting to socialize", "Increased creativity", "Feeling confident", 
-        "Generosity", "Excitement", "Sense of calm"
+        "High energy",
+        "Smiling",
+        "Feeling motivated",
+        "Feeling grateful",
+        "Wanting to socialize",
+        "Increased creativity",
+        "Feeling confident",
+        "Generosity",
+        "Excitement",
+        "Sense of calm",
       ],
     },
     'Neutral': {
@@ -43,9 +50,16 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
       'minLabel': '',
       'maxLabel': '',
       'symptoms': <String>[
-        "Feeling indifferent", "Low motivation", "Difficulty feeling excited",
-        "Feeling detached", "Going through the motions", "Lack of energy",
-        "Feeling balanced", "Hard to focus", "Neither happy nor sad", "Feeling steady"
+        "Feeling indifferent",
+        "Low motivation",
+        "Difficulty feeling excited",
+        "Feeling detached",
+        "Going through the motions",
+        "Lack of energy",
+        "Feeling balanced",
+        "Hard to focus",
+        "Neither happy nor sad",
+        "Feeling steady",
       ],
     },
     'Sad': {
@@ -56,9 +70,16 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
       'minLabel': 'no sadness',
       'maxLabel': 'extremely sad',
       'symptoms': <String>[
-        "Low energy", "Crying", "Feeling empty", "Loss of interest",
-        "Difficulty concentrating", "Changes in appetite", "Feeling hopeless",
-        "Withdrawing from others", "Trouble sleeping", "Feeling worthless"
+        "Low energy",
+        "Crying",
+        "Feeling empty",
+        "Loss of interest",
+        "Difficulty concentrating",
+        "Changes in appetite",
+        "Feeling hopeless",
+        "Withdrawing from others",
+        "Trouble sleeping",
+        "Feeling worthless",
       ],
     },
     'Anxious': {
@@ -69,10 +90,22 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
       'minLabel': 'no anxiety',
       'maxLabel': 'extremely anxious',
       'symptoms': <String>[
-        "Racing heart", "Rapid breathing", "Chest tightness", "Feeling very hot or cold",
-        "Sweating", "Dry mouth", "Lump in throat", "Upset stomach", "Nausea",
-        "Dizzy or lightheaded", "Trouble concentrating", "Muscle tension",
-        "Feeling restless", "Trouble sleeping", "Racing thoughts", "Lots of worries"
+        "Racing heart",
+        "Rapid breathing",
+        "Chest tightness",
+        "Feeling very hot or cold",
+        "Sweating",
+        "Dry mouth",
+        "Lump in throat",
+        "Upset stomach",
+        "Nausea",
+        "Dizzy or lightheaded",
+        "Trouble concentrating",
+        "Muscle tension",
+        "Feeling restless",
+        "Trouble sleeping",
+        "Racing thoughts",
+        "Lots of worries",
       ],
     },
     'Angry': {
@@ -83,9 +116,16 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
       'minLabel': 'no anger',
       'maxLabel': 'extremely angry',
       'symptoms': <String>[
-        "Clenched jaw", "Tense muscles", "Racing heart", "Raised voice",
-        "Irritability", "Feeling disrespected", "Urge to lash out",
-        "Difficulty listening", "Sweating", "Headache"
+        "Clenched jaw",
+        "Tense muscles",
+        "Racing heart",
+        "Raised voice",
+        "Irritability",
+        "Feeling disrespected",
+        "Urge to lash out",
+        "Difficulty listening",
+        "Sweating",
+        "Headache",
       ],
     },
   };
@@ -103,13 +143,15 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
       // Save locally
       final prefs = await SharedPreferences.getInstance();
       List<String> existingMoods = prefs.getStringList('local_moods') ?? [];
-      existingMoods.add(jsonEncode({
-        'label': widget.moodLabel,
-        'intensity': intensity,
-        'notes': _notesController.text.trim(),
-        'symptoms': selectedSymptoms.toList(),
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+      existingMoods.add(
+        jsonEncode({
+          'label': widget.moodLabel,
+          'intensity': intensity,
+          'notes': _notesController.text.trim(),
+          'symptoms': selectedSymptoms.toList(),
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      );
       await prefs.setStringList('local_moods', existingMoods);
 
       // Trigger AI Summary in background for today (force update after every submit)
@@ -121,32 +163,46 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
             final date = m['createdAt'] as DateTime?;
             if (date == null) return false;
             // Compare local date strings
-            return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}" == todayStr;
+            return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}" ==
+                todayStr;
           }).toList();
-          
+
           String userDataText = "MOOD LOGS:\n";
           for (var m in todayMoods.reversed) {
             final d = m['createdAt'] as DateTime?;
-            final time = d != null ? "${d.hour}:${d.minute.toString().padLeft(2, '0')}" : "";
+            final time = d != null
+                ? "${d.hour}:${d.minute.toString().padLeft(2, '0')}"
+                : "";
             final label = m['label'];
             final intensity = m['intensity'];
             final notes = m['notes'] ?? 'None';
             final symptoms = (m['symptoms'] as List?)?.join(', ') ?? 'None';
-            userDataText += "- At $time: Mood=$label, Intensity=$intensity/10, Notes=$notes, Symptoms=$symptoms\n";
+            userDataText +=
+                "- At $time: Mood=$label, Intensity=$intensity/10, Notes=$notes, Symptoms=$symptoms\n";
           }
-          
+
           await service.loadJournals();
-          final dailyJournals = service.journals.where((j) => j['date'] == todayStr || (j['date']?.contains(todayStr) ?? false)).toList();
+          final dailyJournals = service.journals
+              .where(
+                (j) =>
+                    j['date'] == todayStr ||
+                    (j['date']?.contains(todayStr) ?? false),
+              )
+              .toList();
           if (dailyJournals.isNotEmpty) {
             userDataText += "\nJOURNAL ENTRIES:\n";
             for (var j in dailyJournals) {
               userDataText += "- ${j['title']}: ${j['content']}\n";
             }
           }
-          
+
           final moodSummaryService = MoodSummaryService();
-          final summary = await moodSummaryService.generateDailySummary(todayStr, userDataText);
-          if (summary.isNotEmpty && !summary.startsWith('Summary unavailable')) {
+          final summary = await moodSummaryService.generateDailySummary(
+            todayStr,
+            userDataText,
+          );
+          if (summary.isNotEmpty &&
+              !summary.startsWith('Summary unavailable')) {
             await service.saveDailySummary(todayStr, summary);
           }
         } catch (_) {
@@ -163,7 +219,8 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
         context: context,
         builder: (ctx) => Dialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30)),
+            borderRadius: BorderRadius.circular(30),
+          ),
           elevation: 20,
           backgroundColor: const Color(0xFFFF8A65),
           child: Padding(
@@ -204,14 +261,14 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
                     ),
                     onPressed: () async {
                       Navigator.pop(ctx); // pop dialog
-                      
+
                       // Navigate to GratitudeJarScreen
                       await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const GratitudeJarScreen(),
                         ),
                       );
-                      
+
                       if (!mounted) return;
                       // Pop back to Dashboard with a flag to show the Quick Relief modal
                       Navigator.of(context).pop(true);
@@ -246,8 +303,7 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
   }
 
   Future<void> _openSymptomsScreen(Map<String, dynamic> moodConf) async {
-    final List<String> availableSymptoms =
-        moodConf['symptoms'] as List<String>;
+    final List<String> availableSymptoms = moodConf['symptoms'] as List<String>;
     final result = await Navigator.push<Set<String>>(
       context,
       MaterialPageRoute(
@@ -384,13 +440,16 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
                     ] else ...[
                       // Neutral space padding
                       const SizedBox(height: 48),
-                    ]
+                    ],
                   ],
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 8.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -430,12 +489,15 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF2F8AE5), width: 2),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF2F8AE5),
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // ── Symptoms Section ──
                   Text(
                     "Experiencing any signs of ${moodConf['signsLabel']}?",
@@ -502,7 +564,9 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         elevation: 4,
-                        shadowColor: const Color(0xFF2F8AE5).withValues(alpha: 0.4),
+                        shadowColor: const Color(
+                          0xFF2F8AE5,
+                        ).withValues(alpha: 0.4),
                       ),
                       onPressed: _submitData,
                       child: const Text(
@@ -518,7 +582,7 @@ class _MoodDetailsScreenState extends State<MoodDetailsScreen> {
                   const SizedBox(height: 40),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -532,7 +596,11 @@ class _CurveClipper extends CustomClipper<Path> {
     final path = Path();
     path.lineTo(0, size.height - 50);
     path.quadraticBezierTo(
-        size.width / 2, size.height, size.width, size.height - 50);
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 50,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -690,21 +758,16 @@ class _SymptomsSelectionScreenState extends State<SymptomsSelectionScreen> {
                 const SizedBox(height: 12),
                 Text(
                   "Check all those that apply.",
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 16,
-                  ),
-                )
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                ),
               ],
             ),
           ),
           Expanded(
             child: ListView.separated(
               itemCount: widget.availableSymptoms.length,
-              separatorBuilder: (context, index) => Divider(
-                height: 1,
-                color: Colors.grey.shade200,
-              ),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: Colors.grey.shade200),
               itemBuilder: (context, index) {
                 final symptom = widget.availableSymptoms[index];
                 final isSelected = _selected.contains(symptom);
@@ -738,9 +801,7 @@ class _SymptomsSelectionScreenState extends State<SymptomsSelectionScreen> {
                     symptom,
                     style: TextStyle(
                       fontSize: 18,
-                      color: isSelected
-                          ? Colors.black87
-                          : Colors.grey.shade700,
+                      color: isSelected ? Colors.black87 : Colors.grey.shade700,
                       fontWeight: isSelected
                           ? FontWeight.w500
                           : FontWeight.normal,
@@ -755,4 +816,3 @@ class _SymptomsSelectionScreenState extends State<SymptomsSelectionScreen> {
     );
   }
 }
-

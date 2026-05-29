@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -8,19 +9,16 @@ class AIService {
       "https://openrouter.ai/api/v1/chat/completions";
 
   static const List<List<String>> _modelGroups = [
-    // G1
     [
       "openai/gpt-4o-mini",
       "anthropic/claude-3.5-haiku",
       "meta-llama/llama-3.3-70b-instruct:free",
     ],
-    // G2
     [
       "google/gemini-flash-1.5:free",
       "mistralai/mistral-7b-instruct:free",
       "deepseek/deepseek-r1:free",
     ],
-    // G3
     [
       "qwen/qwen-2.5-72b-instruct:free",
       "google/gemini-2.0-flash-thinking-exp:free",
@@ -123,14 +121,12 @@ Help the user feel a little better, a little lighter, or a little less alone aft
           }
           return "I'm here with you. I just couldn't generate a reply right now.";
         } else if (response.statusCode == 429) {
-          // hits limit -> try next group
           if (i < _modelGroups.length - 1) {
             continue;
           }
-          // All hits limits
+
           return "I'm a bit busy right now, please try again in a moment";
         } else {
-          // Non-429 error
           String details = "Unknown Error";
           try {
             final errorData = jsonDecode(response.body);
@@ -146,7 +142,7 @@ Help the user feel a little better, a little lighter, or a little less alone aft
       }
     }
 
-    // Safety fallback
+
     return "I'm a bit busy right now, please try again in a moment";
   }
 
@@ -197,6 +193,6 @@ Help the user feel a little better, a little lighter, or a little less alone aft
     };
 
     final quotes = fallbacks[mood] ?? fallbacks['Neutral']!;
-    return quotes[DateTime.now().millisecond % quotes.length];
+    return quotes[Random().nextInt(quotes.length)];
   }
 }

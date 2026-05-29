@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'chatbot_screen.dart';
 import 'journal_screen.dart';
 import 'relax_screen.dart';
+import 'podcast_screen.dart';
 
 void showQuickReliefModal(BuildContext context) {
   showDialog(
@@ -78,9 +79,9 @@ class QuickReliefOverlay extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       _OptionButton(
-                        icon: Icons.air,
-                        label: 'Take a breath',
-                        color: const Color(0xFF8EB4F8), // App light blue
+                        icon: Icons.self_improvement,
+                        label: 'Relax',
+                        color: const Color(0xFF8EB4F8),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -93,13 +94,13 @@ class QuickReliefOverlay extends StatelessWidget {
                       const SizedBox(height: 24),
                       _OptionButton(
                         icon: Icons.headphones,
-                        label: 'Calming sounds',
-                        color: const Color(0xFFC9A8F1), // App purple
+                        label: 'Listen to a podcast',
+                        color: const Color(0xFFC9A8F1),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const RelaxScreen(),
+                              builder: (_) => const PodcastScreen(),
                             ),
                           );
                         },
