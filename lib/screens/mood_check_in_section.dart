@@ -429,7 +429,9 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFB74D).withValues(alpha: 0.2),
+                            color: const Color(
+                              0xFFFFB74D,
+                            ).withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -480,7 +482,9 @@ class _MoodCheckInSectionState extends State<MoodCheckInSection>
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFB74D).withValues(alpha: 0.2),
+                            color: const Color(
+                              0xFFFFB74D,
+                            ).withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),

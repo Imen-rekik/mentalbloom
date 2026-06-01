@@ -35,7 +35,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       setState(() {
         _postLimit += 20;
       });
@@ -130,7 +131,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
       if (!mounted) return;
       debugPrint("Community share error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString().replaceFirst('Exception: ', '')}")),
+        SnackBar(
+          content: Text(
+            "Error: ${e.toString().replaceFirst('Exception: ', '')}",
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -170,11 +175,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
           .doc(postId)
           .collection('comments')
           .add({
-        'userId': user.uid,
-        'username': 'Anonymous',
-        'content': text,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+            'userId': user.uid,
+            'username': 'Anonymous',
+            'content': text,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
 
       setState(() {
         controller.clear();
@@ -191,7 +196,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString().replaceFirst('Exception: ', '')}")),
+        SnackBar(
+          content: Text(
+            "Error: ${e.toString().replaceFirst('Exception: ', '')}",
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -211,21 +220,29 @@ class _CommunityScreenState extends State<CommunityScreen> {
         .doc(postId)
         .collection('reactions')
         .doc(user.uid);
-    final postRef = FirebaseFirestore.instance.collection('communityPosts').doc(postId);
+    final postRef = FirebaseFirestore.instance
+        .collection('communityPosts')
+        .doc(postId);
 
     final doc = await reactionRef.get();
-    final currentReaction = doc.exists ? (doc.data() as Map<String, dynamic>)['reactionType'] as String? : null;
+    final currentReaction = doc.exists
+        ? (doc.data() as Map<String, dynamic>)['reactionType'] as String?
+        : null;
 
     final batch = FirebaseFirestore.instance.batch();
 
     if (currentReaction == emoji) {
       // Remove reaction
       batch.delete(reactionRef);
-      batch.update(postRef, {'reactionsCount.$emoji': FieldValue.increment(-1)});
+      batch.update(postRef, {
+        'reactionsCount.$emoji': FieldValue.increment(-1),
+      });
     } else {
       // Switch or add reaction
       if (currentReaction != null) {
-        batch.update(postRef, {'reactionsCount.$currentReaction': FieldValue.increment(-1)});
+        batch.update(postRef, {
+          'reactionsCount.$currentReaction': FieldValue.increment(-1),
+        });
       }
       batch.set(reactionRef, {
         'userId': user.uid,
@@ -242,10 +259,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Let's keep this space safe 💙",
-            style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Let's keep this space safe 💙",
+          style: TextStyle(
+            color: AppColors.textMain,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(
-          reason ?? "Your message may not feel supportive for someone going through a hard time. Would you like to rephrase it?",
+          reason ??
+              "Your message may not feel supportive for someone going through a hard time. Would you like to rephrase it?",
           style: const TextStyle(color: AppColors.textLight, fontSize: 16),
         ),
         backgroundColor: AppColors.background,
@@ -253,8 +276,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("OK",
-                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: const Text(
+              "OK",
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
@@ -274,30 +303,41 @@ class _CommunityScreenState extends State<CommunityScreen> {
           StreamBuilder<QuerySnapshot>(
             stream: _showMyPostsOnly
                 ? FirebaseFirestore.instance
-                    .collection('communityPosts')
-                    .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-                    .orderBy('timestamp', descending: true)
-                    .limit(_postLimit)
-                    .snapshots()
+                      .collection('communityPosts')
+                      .where(
+                        'userId',
+                        isEqualTo: FirebaseAuth.instance.currentUser?.uid,
+                      )
+                      .orderBy('timestamp', descending: true)
+                      .limit(_postLimit)
+                      .snapshots()
                 : FirebaseFirestore.instance
-                    .collection('communityPosts')
-                    .orderBy('timestamp', descending: true)
-                    .limit(_postLimit)
-                    .snapshots(),
+                      .collection('communityPosts')
+                      .orderBy('timestamp', descending: true)
+                      .limit(_postLimit)
+                      .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
                 return const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
                 );
               }
               if (snapshot.hasError) {
                 return SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text('Error loading posts', style: TextStyle(color: AppColors.textLight))),
+                  child: Center(
+                    child: Text(
+                      'Error loading posts',
+                      style: TextStyle(color: AppColors.textLight),
+                    ),
+                  ),
                 );
               }
-              
+
               final docs = snapshot.data?.docs ?? [];
               if (docs.isEmpty) {
                 return SliverFillRemaining(
@@ -307,13 +347,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
               }
 
               return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final post = CommunityPost.fromFirestore(docs[index]);
-                    return _buildPostCard(post);
-                  },
-                  childCount: docs.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final post = CommunityPost.fromFirestore(docs[index]);
+                  return _buildPostCard(post);
+                }, childCount: docs.length),
               );
             },
           ),
@@ -339,10 +376,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           SizedBox(height: 8),
           Text(
             "You are not alone here 💙",
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textLight,
-            ),
+            style: TextStyle(fontSize: 16, color: AppColors.textLight),
           ),
         ],
       ),
@@ -388,18 +422,27 @@ class _CommunityScreenState extends State<CommunityScreen> {
               children: [
                 Text(
                   user != null ? "Posting to Community" : "Sign in to post",
-                  style: const TextStyle(color: AppColors.textLight, fontSize: 14, fontStyle: FontStyle.italic),
+                  style: const TextStyle(
+                    color: AppColors.textLight,
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: _isChecking || user == null ? null : _handleShare,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: const Color(0xFF1A1A1A), // Much darker text
+                    foregroundColor: const Color(
+                      0xFF1A1A1A,
+                    ), // Much darker text
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
                   child: _isChecking
                       ? const SizedBox(
@@ -410,7 +453,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             color: Color(0xFF1A1A1A),
                           ),
                         )
-                      : const Text("Share", style: TextStyle(fontWeight: FontWeight.bold)),
+                      : const Text(
+                          "Share",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                 ),
               ],
             ),
@@ -434,10 +480,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Text(
-            "💙",
-            style: TextStyle(fontSize: 48),
-          ),
+          Text("💙", style: TextStyle(fontSize: 48)),
           SizedBox(height: 16),
           Text(
             "Be the first to share",
@@ -471,7 +514,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          const Text("My Posts Only", style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
+          const Text(
+            "My Posts Only",
+            style: TextStyle(
+              color: AppColors.textMain,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           Switch(
             value: _showMyPostsOnly,
             activeColor: AppColors.primary,
@@ -517,7 +566,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 CircleAvatar(
                   backgroundColor: avatarColor,
                   radius: 20,
-                  child: const Icon(Icons.person, color: Colors.white70, size: 24),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white70,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -537,14 +590,21 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           if (currentUser?.uid == post.userId)
                             Container(
                               margin: const EdgeInsets.only(left: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
                                 "You",
-                                style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                         ],
@@ -590,8 +650,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         .doc(currentUser.uid)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      final userReaction = snapshot.hasData && snapshot.data!.exists
-                          ? (snapshot.data!.data() as Map<String, dynamic>)['reactionType'] as String?
+                      final userReaction =
+                          snapshot.hasData && snapshot.data!.exists
+                          ? (snapshot.data!.data()
+                                    as Map<String, dynamic>)['reactionType']
+                                as String?
                           : null;
                       return Row(
                         children: [
@@ -625,7 +688,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       .collection('comments')
                       .snapshots(),
                   builder: (context, snapshot) {
-                    final repliesCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                    final repliesCount = snapshot.hasData
+                        ? snapshot.data!.docs.length
+                        : 0;
                     return TextButton.icon(
                       onPressed: () {
                         setState(() {
@@ -636,14 +701,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           }
                         });
                       },
-                      icon: const Icon(Icons.reply, color: AppColors.textLight, size: 20),
+                      icon: const Icon(
+                        Icons.reply,
+                        color: AppColors.textLight,
+                        size: 20,
+                      ),
                       label: Text(
                         "$repliesCount Replies",
                         style: const TextStyle(color: AppColors.textLight),
                       ),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                     );
                   },
@@ -658,19 +729,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  Widget _buildReactionButton(CommunityPost post, String emoji, String? userReaction) {
+  Widget _buildReactionButton(
+    CommunityPost post,
+    String emoji,
+    String? userReaction,
+  ) {
     final count = post.reactionsCount[emoji] ?? 0;
     final isSelected = userReaction == emoji;
-    
+
     return InkWell(
       onTap: () => _toggleReaction(post.id, emoji),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.3) : AppColors.secondary.withValues(alpha: 0.5),
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : AppColors.secondary.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? Border.all(color: AppColors.primary.withValues(alpha: 0.5), width: 1) : null,
+          border: isSelected
+              ? Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.5),
+                  width: 1,
+                )
+              : null,
         ),
         child: Row(
           children: [
@@ -679,7 +761,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
               const SizedBox(width: 4),
               Text(
                 count.toString(),
-                style: const TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  color: AppColors.textMain,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
             ],
           ],
@@ -709,10 +795,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
               if (!snapshot.hasData) return const SizedBox.shrink();
               final docs = snapshot.data!.docs;
               if (docs.isEmpty) return const SizedBox.shrink();
-              
+
               return Column(
                 children: [
-                  ...docs.map((doc) => _buildReplyItem(CommunityComment.fromFirestore(doc))),
+                  ...docs.map(
+                    (doc) =>
+                        _buildReplyItem(CommunityComment.fromFirestore(doc)),
+                  ),
                   const SizedBox(height: 12),
                 ],
               );
@@ -730,9 +819,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     controller: _replyControllers[post.id],
                     decoration: const InputDecoration(
                       hintText: "Add a supportive reply...",
-                      hintStyle: TextStyle(color: AppColors.textLight, fontSize: 14),
+                      hintStyle: TextStyle(
+                        color: AppColors.textLight,
+                        fontSize: 14,
+                      ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -744,7 +839,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       child: SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
                       ),
                     )
                   : IconButton(
@@ -779,9 +877,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.white,
-                borderRadius: BorderRadius.circular(16).copyWith(topLeft: Radius.zero),
-                border: isMe ? Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1) : null,
+                color: isMe
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : AppColors.white,
+                borderRadius: BorderRadius.circular(
+                  16,
+                ).copyWith(topLeft: Radius.zero),
+                border: isMe
+                    ? Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        width: 1,
+                      )
+                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,32 +897,50 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     children: [
                       Text(
                         reply.username,
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMain, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textMain,
+                          fontSize: 14,
+                        ),
                       ),
                       if (isMe)
                         Container(
                           margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
                             "You",
-                            style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       const Spacer(),
                       Text(
                         _timeAgo(reply.timestamp),
-                        style: const TextStyle(color: AppColors.textLight, fontSize: 10),
+                        style: const TextStyle(
+                          color: AppColors.textLight,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     reply.content,
-                    style: const TextStyle(color: AppColors.textMain, fontSize: 14, height: 1.3),
+                    style: const TextStyle(
+                      color: AppColors.textMain,
+                      fontSize: 14,
+                      height: 1.3,
+                    ),
                   ),
                 ],
               ),
